@@ -8,7 +8,7 @@ set -Eeu
 #
 #  The list of directories that bake will search when resolving libraries (via require)
 #
-BAKEPATH="."
+BAKEPATH="${BAKEPATH:-.}"
 
 BAKE_DEFAULT_TASK=""
 declare -A BAKE_TASKS
