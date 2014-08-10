@@ -7,7 +7,7 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 # Installation
 
     test -d $HOME/bin || mkdir $HOME/bin
-    curl https://raw.githubusercontent.com/kyleburton/sandbox/bake/bake > $HOME/bin/bake
+    curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
     chmod 755 $HOME/bin/bake
 
 # Example Bakefile
