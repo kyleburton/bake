@@ -82,3 +82,5 @@ Distributed under the Eclipse Public License, the same as Clojure.
 
 * `bake_require_all path` : recursively load all the files under `path`
 * implement dependency tracking, something like: `bake_deps a b c` where `bake_deps` just runs the deps and tracks if they've been run already.
+* how can we support namespaces for tasks?
+* support command line auto-completion for bake
