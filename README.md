@@ -54,15 +54,15 @@ This registers a task and it's description so it can be executed and help can be
 
 This registers the default task to be run if no task is passed on the command line.
 
-## `bake_push_libdir path`
+### `bake_push_libdir path`
 
 Pushes a file system path onto the front of `BAKEPATH`.
 
-## `bake_add_libdir path`
+### `bake_add_libdir path`
 
 Pushes a file system path onto the end of `BAKEPATH`.
 
-## `bake_require libname`
+### `bake_require libname`
 
 Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
 
