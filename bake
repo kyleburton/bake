@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+set -Eeu
+
+# TODO: detect if we're being sourced or if we're being executed
+# TODO: implement require
+
+# BAKEPATH
+#
+#  The list of directories that bake will search when resolving libraries (via require)
+#
+BAKEPATH="."
+
+BAKE_DEFAULT_TASK=""
+declare -A BAKE_TASKS
+declare -A BAKE_TASK_DESCRIPTIONS
+declare -A BAKE_LIBS
+
+function bake_push_libdir () {
+  local path="$1"
+  export BAKEPATH="$path:$BAKEPATH"
+}
+
+function bake_add_libdir () {
+  local path="$1"
+  export BAKEPATH="$BAKEPATH:$path"
+}
+
+function bake_default_task () {
+  local task="$1"
+  export BAKE_DEFAULT_TASK="$task"
+}
+
+function bake_root_dir () {
+  # see: http://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
+  pushd $(dirname $0) > /dev/null
+  local BAKE_ROOT_DIR="$(pwd)"
+  popd > /dev/null
+  echo "$BAKE_ROOT_DIR"
+}
+
+function bake_bakefile_dir () {
+  pushd $(dirname $BAKEFILE) > /dev/null
+  local script_dir="$(pwd)"
+  popd > /dev/null
+  echo "$script_dir"
+}
+
+BAKE_ROOT_DIR="$(bake_root_dir)"
+
+# sources a library
+function bake_require () {
+  local file="$1"
+  for path in $(echo "$BAKEPATH" | tr : ' '); do
+    local fname="$path/$file"
+    if [ -e "$fname" ]; then
+      BAKE_LIBS["$file"]="$fname"
+      source $fname
+      return 0
+    fi
+
+    fname="$path/$file.sh"
+    if [ -e "$fname" ]; then
+      BAKE_LIBS["$file"]="$fname"
+      source $fname
+      return 0
+    fi
+  done
+
+  echo "Error: unable to require $file! (not found on BAKEPATH)"
+  return 1
+}
+
+function bake_task () {
+  local name="${1:-}"
+  local short_desc="${2:-$name}"
+  if [ -z "$name" ]; then
+    echo "Error: you must supply a task name!"
+    return 1
+  fi
+  BAKE_TASKS[$name]="ok"
+  BAKE_TASK_DESCRIPTIONS[$name]="$short_desc"
+}
+
+function bake_task_short_desc () {
+  local name="${1:-}"
+  echo "${BAKE_TASK_DESCRIPTIONS[$name]}" | head -n 1
+}
+
+function bake_is_registered_task () {
+  local name="$1"
+  local value="${BAKE_TASKS[$name]:-}"
+  test "$value" = "ok"
+}
+
+function bake_find_bakefile () {
+  if [ -n "${BAKEFILE:-}" ]; then
+    echo "$BAKEFILE"
+    return 0
+  fi
+
+  if [ -e "Bakefile" ]; then
+    echo "Bakefile"
+    return 0
+  fi
+
+  if [ -e "bakefile" ]; then
+    echo "bakefile"
+    return 0
+  fi
+
+  echo ""
+  return 1
+}
+
+function bake_inernal_help () {
+  echo "$0 task [arg ...]"
+  echo ""
+  echo "Tasks are taken from the file Bakefile (or bakefile) in the $PWD."
+  echo "You can specify an alternate Bakefile by setting BAKEFILE:"
+  echo ""
+  echo "  BAKEFILE=\"my.Bakefile\" bake"
+  echo ""
+}
+
+function bake_bakefile_help () {
+  echo ""
+  echo "$0 task [arg ...]"
+  echo ""
+  for task in "${!BAKE_TASKS[@]}"; do
+    printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+  done
+  echo ""
+}
+
+function bake_run () {
+  local task="${1:-}"
+  if [ -n "$task" ]; then
+    shift
+  fi
+
+  local args="$@"
+  local bakefile="$(bake_find_bakefile)"
+
+  if [ ! -e "$bakefile" ]; then
+    echo "Error: could not locate a Bakefile!"
+    echo ""
+    bake_inernal_help
+    return 1
+  fi
+
+  export BAKEFILE="$bakefile"
+
+  source $bakefile
+
+  if [ -n "$task" ]; then
+    if bake_is_registered_task "$task"; then
+      $task "$@"
+      exit $?
+    fi
+  fi
+
+  if [ -n "$BAKE_DEFAULT_TASK" ]; then
+    "$BAKE_DEFAULT_TASK"
+    exit $?
+  fi
+
+  bake_bakefile_help
+  exit 1
+}
+
+# detect if we're being run or sourced
+# from: http://stackoverflow.com/questions/2683279/how-to-detect-if-a-script-is-being-sourced
+function bake_is_main () {
+  test "${FUNCNAME[1]}" = "main"
+}
+
+if bake_is_main; then
+  bake_run "$@"
+fi
