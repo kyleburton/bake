@@ -128,7 +128,7 @@ function bake_bakefile_help () {
   echo ""
   for task in "${!BAKE_TASKS[@]}"; do
     printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
-  done
+  done | sort
   echo ""
 }
 
