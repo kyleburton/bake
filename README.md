@@ -6,14 +6,14 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
 # Installation
 
-    test -d $HOME/bin || mkdir $HOME/bin
-    curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
-    chmod 755 $HOME/bin/bake
+    $ test -d $HOME/bin || mkdir $HOME/bin
+    $ curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
+    $ chmod 755 $HOME/bin/bake
 
 # Example Bakefile
 
-    mkdir test/lib
-    cat >> test/lib/mylib.sh
+    $ mkdir test/lib
+    $ cat >> test/lib/mylib.sh
     #!/usr/bin/env bash
     set -eu
     bake_task foo "The foo command just echos it's arguments"
@@ -22,7 +22,7 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
     }
     ^D
 
-    cat >> Bakefile
+    $ cat >> Bakefile
     #!/usr/bin/env bash
     bake_push_libdir $(bake_bakefile_dir)/test/lib
     bake_require mylib
@@ -30,8 +30,16 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
 Then run bake:
 
-    bake
-    bake foo
+    $ bake
+    
+    bake task [arg ...]
+    
+      foo                            The foo command just echos it's arguments
+    
+    
+    $ bake foo this that
+    foo: args='this that'
+
 
 
 # `Bakefile`
