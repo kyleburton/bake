@@ -72,7 +72,7 @@ function bake_require () {
 
 function bake_task () {
   local name="${1:-}"
-  local short_desc="${2:-$name}"
+  local short_desc="${2:-No Description for task: $name}"
   if [ -z "$name" ]; then
     echo "Error: you must supply a task name!"
     return 1
