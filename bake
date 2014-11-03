@@ -122,13 +122,49 @@ function bake_inernal_help () {
   echo ""
 }
 
+function bake_sorted_task_list () {
+  for task in "${!BAKE_TASKS[@]}"; do
+    echo $task
+  done | sort
+}
+
+function bake_show_matching_tasks () {
+  local unknown_task="${1:-}"
+  local matches=""
+  #for task in "${!BAKE_TASKS[@]}"; do
+  for task in $(bake_sorted_task_list); do
+    if [[ "$task" == *$unknown_task* ]]; then
+      matches="$matches $task"
+      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+    fi
+  done
+
+  if [ -z "$matches" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+function bake_show_all_tasks () {
+  for task in $(bake_sorted_task_list); do
+    printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+  done
+}
+
 function bake_bakefile_help () {
+  local unknown_task="${1:-}"
   echo ""
   echo "$0 task [arg ...]"
   echo ""
-  for task in "${!BAKE_TASKS[@]}"; do
-    printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
-  done | sort
+  if [ -n "$unknown_task" ]; then
+    if ! bake_show_matching_tasks "$unknown_task"; then
+      bake_show_all_tasks
+    fi
+  else
+    bake_show_all_tasks
+  fi
+
   echo ""
 }
 
@@ -164,7 +200,7 @@ function bake_run () {
     exit $?
   fi
 
-  bake_bakefile_help
+  bake_bakefile_help "$task"
   exit 1
 }
 
