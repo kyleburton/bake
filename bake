@@ -2,7 +2,7 @@
 set -Eeu
 
 # TODO: detect if we're being sourced or if we're being executed
-# TODO: implement require
+BAKE_VERSION="2014-11-05"
 
 # BAKEPATH
 #
