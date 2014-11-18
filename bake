@@ -11,6 +11,7 @@ BAKE_COLOR_BLUE=""
 BAKE_COLOR_LBLUE=""
 BAKE_COLOR_GREEN=""
 BAKE_COLOR_LGREEN=""
+BAKE_URL="https://raw.githubusercontent.com/kyleburton/bake/master/bake"
 
 BAKE_LOG_LEVEL_NONE=0  # none
 BAKE_LOG_LEVEL_FATAL=1 # fatal
@@ -192,6 +193,11 @@ function bake_bakefile_help () {
   echo ""
 }
 
+function bake_upgrade () {
+  curl -o $0 "$BAKE_URL"
+  chmod 755 $0
+}
+
 function bake_run () {
   local task="${1:-}"
   if [ -n "$task" ]; then
@@ -202,6 +208,11 @@ function bake_run () {
   local bakefile="$(bake_find_bakefile)"
 
   if [ ! -e "$bakefile" ]; then
+    if [ "$task" == upgrade ]; then
+      bake_upgrade
+      return 0
+    fi
+
     echo "Error: could not locate a Bakefile!"
     echo ""
     bake_inernal_help
@@ -222,6 +233,11 @@ function bake_run () {
   if [ -n "$BAKE_DEFAULT_TASK" ]; then
     "$BAKE_DEFAULT_TASK"
     exit $?
+  fi
+
+  if [ "$task" == upgrade ]; then
+    bake_upgrade
+    return 0
   fi
 
   bake_bakefile_help "$task"
