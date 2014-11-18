@@ -24,6 +24,10 @@ function 01_find_bakefile_sets_absolute_path () {
 
 bake_task all
 function all () {
+  local debug="${1:-}"
+  if [ -n "$debug" ]; then
+    set -x
+  fi
   local failed=""
   local passed=""
   for test in $TESTS; do
@@ -35,6 +39,8 @@ function all () {
       bake_echo_red "bake $test # FAILED"
     fi
   done
-  bake_echo_green "All tests passed"
+  if [ -z "$failed" ]; then
+    bake_echo_green "All tests passed"
+  fi
 }
 

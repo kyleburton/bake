@@ -47,10 +47,7 @@ function bake_root_dir () {
 }
 
 function bake_bakefile_dir () {
-  pushd $(dirname $BAKEFILE) > /dev/null
-  local script_dir="$(pwd)"
-  popd > /dev/null
-  echo "$script_dir"
+  dirname $BAKEFILE
 }
 
 BAKE_ROOT_DIR="$(bake_root_dir)"
