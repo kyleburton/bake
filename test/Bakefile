@@ -20,6 +20,16 @@ function 01_find_bakefile_sets_absolute_path () {
   cd lib
   test -f $BAKEFILE
   test -f $(bake_bakefile_dir)/Bakefile
+  cd ..
+}
+
+bake_test 02_bake_cd
+function 02_bake_cd () {
+  cd lib
+  bake_cd
+  test -f Bakefile || exit 1
+  bake_cd lib
+  test -f ../Bakefile || exit 1
 }
 
 bake_task all
