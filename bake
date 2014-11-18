@@ -12,6 +12,14 @@ BAKE_COLOR_LBLUE=""
 BAKE_COLOR_GREEN=""
 BAKE_COLOR_LGREEN=""
 
+BAKE_LOG_LEVEL_NONE=0  # none
+BAKE_LOG_LEVEL_FATAL=1 # fatal
+BAKE_LOG_LEVEL_ERROR=2 # error
+BAKE_LOG_LEVEL_WARN=3  # warn
+BAKE_LOG_LEVEL_INFO=4  # info
+BAKE_LOG_LEVEL_DEBUG=5 # debug
+BAKE_LOG_LEVEL="${BAKE_LOG_LEVEL:-$BAKE_LOG_LEVEL_INFO}"
+
 # BAKEPATH
 #
 #  The list of directories that bake will search when resolving libraries (via require)
@@ -249,6 +257,60 @@ function bake_echo_blue () {
 
 function bake_echo_green () {
   echo -e "${BAKE_COLOR_GREEN}$@${BAKE_COLOR_NORMAL}"
+}
+
+function bake_log_debug () {
+  if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_DEBUG ]; then
+    echo "[DEBUG ${FUNCNAME[1]}] $@"
+  fi
+}
+
+function bake_log_info () {
+  if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_INFO ]; then
+    echo "[INFO ${FUNCNAME[1]}] $@"
+  fi
+}
+
+function bake_log_warn () {
+  if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_WARN ]; then
+    echo "[WARN ${FUNCNAME[1]}] $@"
+  fi
+}
+
+function bake_log_error () {
+  if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_ERROR ]; then
+    echo "[ERROR ${FUNCNAME[1]}] $@"
+  fi
+}
+
+function bake_log_fatal () {
+  if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_FATAL ]; then
+    echo "[FATAL ${FUNCNAME[1]}] $@"
+  fi
+}
+
+function bake_log_level () {
+  local level="$1"
+  case "$level" in
+    debug)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_DEBUG"
+      ;;
+    info)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_INFO"
+      ;;
+    warn)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_WARN"
+      ;;
+    error)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_ERROR"
+      ;;
+    fatal)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_FATAL"
+      ;;
+    none)
+      export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_NONE"
+      ;;
+  esac
 }
 
 bake_init

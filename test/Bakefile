@@ -34,6 +34,7 @@ function 02_bake_cd () {
 
 bake_task all
 function all () {
+  bake_log_level fatal
   local debug="${1:-}"
   if [ -n "$debug" ]; then
     set -x
@@ -41,6 +42,7 @@ function all () {
   local failed=""
   local passed=""
   for test in $TESTS; do
+    bake_log_debug "running $test"
     if $test; then
       passed="$passed $test"
       bake_echo_green "bake $test # OK"
