@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -eu
+
+TEST_NAME=".none."
+TESTS=""
+
+function bake_test () {
+  local tname="$1"
+  bake_task $tname
+  TESTS="$TESTS $tname"
+}
+
+function in_test () {
+  TEST_NAME="$1"
+}
+
+bake_test 01_find_bakefile_sets_absolute_path
+function 01_find_bakefile_sets_absolute_path () {
+  in_test $FUNCNAME
+  cd lib
+  test -f $BAKEFILE
+  test -f $(bake_bakefile_dir)/Bakefile
+}
+
+bake_task all
+function all () {
+  local failed=""
+  local passed=""
+  for test in $TESTS; do
+    if $test; then
+      passed="$passed $test"
+      bake_echo_green "bake $test # OK"
+    else
+      failed="$failed $test"
+      bake_echo_red "bake $test # FAILED"
+    fi
+  done
+  bake_echo_green "All tests passed"
+}
+

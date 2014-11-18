@@ -3,6 +3,14 @@ set -Eeu
 
 # TODO: detect if we're being sourced or if we're being executed
 BAKE_VERSION="2014-11-05"
+BAKE_STDOUT_IS_TERMINAL=""
+BAKE_COLOR_NORMAL=""
+BAKE_COLOR_RED=""
+BAKE_COLOR_LRED=""
+BAKE_COLOR_BLUE=""
+BAKE_COLOR_LBLUE=""
+BAKE_COLOR_GREEN=""
+BAKE_COLOR_LGREEN=""
 
 # BAKEPATH
 #
@@ -98,13 +106,15 @@ function bake_find_bakefile () {
     return 0
   fi
 
+  local project_root="$(pwd)"
+
   if [ -e "Bakefile" ]; then
-    echo "Bakefile"
+    echo "$project_root/Bakefile"
     return 0
   fi
 
   if [ -e "bakefile" ]; then
-    echo "bakefile"
+    echo "$project_root/bakefile"
     return 0
   fi
 
@@ -209,6 +219,33 @@ function bake_run () {
 function bake_is_main () {
   test "${FUNCNAME[1]}" = "main"
 }
+
+function bake_init () {
+  if [ -t 1 ]; then
+    BAKE_STDOUT_IS_TERMINAL="yes"
+    BAKE_COLOR_NORMAL="\e[00m"
+    BAKE_COLOR_RED="\e[00;31m"
+    BAKE_COLOR_LRED="\e[01;31m"
+    BAKE_COLOR_BLUE="\e[00;34m"
+    BAKE_COLOR_LBLUE="\e[01;34m"
+    BAKE_COLOR_GREEN="\e[00;32m"
+    BAKE_COLOR_LGREEN="\e[01;32m"
+  fi
+}
+
+function bake_echo_red () {
+  echo -e "${BAKE_COLOR_RED}$@${BAKE_COLOR_NORMAL}"
+}
+
+function bake_echo_blue () {
+  echo -e "${BAKE_COLOR_BLUE}$@${BAKE_COLOR_NORMAL}"
+}
+
+function bake_echo_green () {
+  echo -e "${BAKE_COLOR_GREEN}$@${BAKE_COLOR_NORMAL}"
+}
+
+bake_init
 
 if bake_is_main; then
   bake_run "$@"
