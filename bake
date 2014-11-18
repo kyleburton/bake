@@ -97,6 +97,15 @@ function bake_is_registered_task () {
   test "$value" = "ok"
 }
 
+function bake_cd () {
+  local path="${1:-}"
+  if [ -z "$path" ]; then
+    cd $(dirname $BAKEFILE)
+  else
+    cd $(dirname $BAKEFILE)/$path
+  fi
+}
+
 function bake_find_bakefile () {
   if [ -n "${BAKEFILE:-}" ]; then
     echo "$BAKEFILE"
