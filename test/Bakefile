@@ -32,6 +32,28 @@ function 02_bake_cd () {
   test -f ../Bakefile || exit 1
 }
 
+bake_test 03_bake_looks_up_directory_tree
+function 03_bake_looks_up_directory_tree () {
+  bake_cd
+  bake_cmd="$(pwd)/../bake"
+  pwd
+  cd sub/dir/a/b/c/
+  if bake_find_bakefile_impl; then
+    bake_echo_green "OK: found Bakefile from $(pwd)"
+  else
+    bake_echo_red "ERROR: did not find Bakefile from $(pwd)"
+    return 1
+  fi
+
+  cd /tmp/
+  if bake_find_bakefile_impl; then
+    return 1
+  else
+    bake_echo_green "OK: did not find Bakefile from $(pwd)"
+  fi
+  bake_cd
+}
+
 bake_task all
 function all () {
   bake_log_level fatal

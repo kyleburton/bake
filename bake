@@ -115,12 +115,7 @@ function bake_cd () {
   fi
 }
 
-function bake_find_bakefile () {
-  if [ -n "${BAKEFILE:-}" ]; then
-    echo "$BAKEFILE"
-    return 0
-  fi
-
+function bake_find_bakefile_impl () {
   local project_root="$(pwd)"
 
   if [ -e "Bakefile" ]; then
@@ -133,8 +128,24 @@ function bake_find_bakefile () {
     return 0
   fi
 
-  echo ""
-  return 1
+  if [ "/" = "$(pwd)" ]; then
+    echo ""
+    return 1;
+  fi
+
+  cd ..
+  bake_find_bakefile_impl
+}
+
+function bake_find_bakefile () {
+  local start_path="$(pwd)"
+  if [ -n "${BAKEFILE:-}" ]; then
+    echo "$BAKEFILE"
+    return 0
+  fi
+
+  bake_find_bakefile_impl
+  cd "$start_path" > /dev/null 2>&1
 }
 
 function bake_inernal_help () {
