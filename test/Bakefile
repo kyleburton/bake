@@ -54,6 +54,12 @@ function 03_bake_looks_up_directory_tree () {
   bake_cd
 }
 
+bake_test 04_require_all
+function 04_require_all () {
+  bake_require_all lib/
+  bar_task
+}
+
 bake_task all
 function all () {
   bake_log_level fatal

@@ -84,6 +84,13 @@ function bake_require () {
   return 1
 }
 
+function bake_require_all () {
+  local path="$1"
+  for f in $(find "$path" -type f); do
+    bake_require $f
+  done
+}
+
 function bake_task () {
   local name="${1:-}"
   local short_desc="${2:-No Description for task: $name}"
