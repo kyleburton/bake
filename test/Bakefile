@@ -81,7 +81,9 @@ function 05_looks_like_url () {
 
 bake_test 06_remote_require
 function 06_remote_require () {
+  bake_package_install github.com/kyleburton/bake/packages/bake/internal/test.sh
   bake_require github.com/kyleburton/bake/packages/bake/internal/test.sh
+  bake_echo_test "remote require successful"
 }
 
 bake_task all

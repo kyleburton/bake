@@ -125,7 +125,8 @@ function bake_package_install () {
     git clone https://$git_url
   fi
   cd $git_project_name
-  git fetch
+  git checkout .
+  git pull
   git checkout $tag
   popd
 }
