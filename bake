@@ -143,7 +143,7 @@ function bake_require_from_url () {
   bake_package_install "$url"
 
   if [ ! -e "$fspath" ]; then
-    echo "Sorry, after cloneing / fetching and checking out $tag, $fspath still doesn't exist"
+    echo "Sorry, after cloneing / fetching and checking out, $fspath still doesn't exist"
     bake_echo_red "Require not found: $url => $fspath"
   fi
 
