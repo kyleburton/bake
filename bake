@@ -135,7 +135,6 @@ function bake_require_from_url () {
   local url="$1"
   local fspath="$(bake_url_to_package_path $url)"
 
-  bake_echo_green "bake_require_from_url: fspath=$fspath"
   if [ -e "$fspath" ]; then
     source $fspath
     return 0
