@@ -110,25 +110,44 @@ function bake_url_to_package_path () {
   echo "$BAKE_PACKAGES_PATH/$fpath"
 }
 
-function bake_require_from_url () {
+function bake_package_install () {
   local url="$1"
   local tag="${2:-master}"
+
+  test -d $BAKE_PACKAGES_PATH || mkdir -p $BAKE_PACKAGES_PATH
+  pushd $BAKE_PACKAGES_PATH
+  local git_project_name="$(echo $url | awk -F/ '{print $3 }')"
+  local git_host_and_user="$(echo $url | awk -F/ '{print $1 "/" $2 }')"
+  local git_url="$(echo $url | awk -F/ '{print $1 "/" $2 "/" $3}')"
+  test -d $git_host_and_user || mkdir -p $git_host_and_user
+  cd $git_host_and_user
+  if [ ! -e $git_project_name ]; then
+    git clone https://$git_url
+  fi
+  cd $git_project_name
+  git fetch
+  git checkout $tag
+  popd
+}
+
+function bake_require_from_url () {
+  local url="$1"
   local fspath="$(bake_url_to_package_path $url)"
+
   bake_echo_green "bake_require_from_url: fspath=$fspath"
   if [ -e "$fspath" ]; then
     source $fspath
     return 0
   fi
 
-  test -d $BAKE_PACKAGES_PATH || mkdir -p $BAKE_PACKAGES_PATH
-  pushd $BAKE_PACKAGES_PATH
-  local git_host_and_user="$(echo $url | awk -F/ '{print $1 "/" $2 }')"
-  local git_url="$(echo $url | awk -F/ '{print $1 "/" $2 "/" $3}')"
-  test -d $git_host_and_user || mkdir -p $git_host_and_user
-  cd $git_host_and_user
-  git clone https://$git_url
-  popd
-  return 1
+  bake_package_install "$url"
+
+  if [ ! -e "$fspath" ]; then
+    echo "Sorry, after cloneing / fetching and checking out $tag, $fspath still doesn't exist"
+    bake_echo_red "Require not found: $url => $fspath"
+  fi
+
+  source $fspath
 }
 
 # sources a library
