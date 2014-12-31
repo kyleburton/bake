@@ -27,6 +27,8 @@ BAKE_LOG_LEVEL="${BAKE_LOG_LEVEL:-$BAKE_LOG_LEVEL_INFO}"
 #
 BAKEPATH="${BAKEPATH:-.}"
 
+BAKE_PACKAGES_PATH="$HOME/.bake/packages"
+
 BAKE_DEFAULT_TASK=""
 declare -A BAKE_TASKS
 declare -A BAKE_TASK_DESCRIPTIONS
@@ -61,8 +63,24 @@ function bake_bakefile_dir () {
 
 BAKE_ROOT_DIR="$(bake_root_dir)"
 
-# sources a library
-function bake_require () {
+function bake_looks_like_url () {
+  local thing="$1"
+  if [[ $thing == http://* ]]; then
+    return 0
+  fi
+
+  if [[ $thing == https://* ]]; then
+    return 0
+  fi
+
+  if [[ $thing == github.com/* ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+function bake_require_from_fs () {
   local file="$1"
   for path in $(echo "$BAKEPATH" | tr : ' '); do
     local fname="$path/$file"
@@ -82,6 +100,45 @@ function bake_require () {
 
   echo "Error: unable to require $file! (not found on BAKEPATH)"
   return 1
+}
+
+function bake_url_to_package_path () {
+  local url="$1"
+  # strip the http:// or https:// if present
+  # then see if it exists as $BAKE_PACKAGES_PATH/$url
+  local fpath="$(echo $url | sed 's/^https\?:\/\///')"
+  echo "$BAKE_PACKAGES_PATH/$fpath"
+}
+
+function bake_require_from_url () {
+  local url="$1"
+  local tag="${2:-master}"
+  local fspath="$(bake_url_to_package_path $url)"
+  bake_echo_green "bake_require_from_url: fspath=$fspath"
+  if [ -e "$fspath" ]; then
+    source $fspath
+    return 0
+  fi
+
+  test -d $BAKE_PACKAGES_PATH || mkdir -p $BAKE_PACKAGES_PATH
+  pushd $BAKE_PACKAGES_PATH
+  local git_host_and_user="$(echo $url | awk -F/ '{print $1 "/" $2 }')"
+  local git_url="$(echo $url | awk -F/ '{print $1 "/" $2 "/" $3}')"
+  test -d $git_host_and_user || mkdir -p $git_host_and_user
+  cd $git_host_and_user
+  git clone https://$git_url
+  popd
+  return 1
+}
+
+# sources a library
+function bake_require () {
+  local module="$1"
+  if bake_looks_like_url "$module"; then
+    bake_require_from_url "$module"
+  else
+    bake_require_from_fs "$module"
+  fi
 }
 
 function bake_require_all () {

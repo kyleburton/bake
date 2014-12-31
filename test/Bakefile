@@ -60,6 +60,30 @@ function 04_require_all () {
   bar_task
 }
 
+bake_test 05_looks_like_url
+function 05_looks_like_url () {
+  local non_urls="lib/foo.sh nothing another.thing README.md some/directory/path gist.github.com/kyleburton/1234"
+  local urls="http://github.com/kyleburton/bake/packages/vim/vim-go https://github.com/kyleburton/bake/packages/vim/vim-go github.com/kyleburton/bake/packages/vim/vim-go"
+  for thing in $non_urls; do
+    if bake_looks_like_url $thing; then
+      bake_echo_red "Expected $thing to not bake_looks_like_url, but it did"
+      return 1
+    fi
+  done
+
+  for thing in $urls; do
+    if ! bake_looks_like_url $thing; then
+      bake_echo_red "Expected $thing to bake_looks_like_url, but it didn't"
+      return 1
+    fi
+  done
+}
+
+bake_test 06_remote_require
+function 06_remote_require () {
+  bake_require github.com/kyleburton/bake/packages/bake/internal/test.sh
+}
+
 bake_task all
 function all () {
   bake_log_level fatal
