@@ -86,6 +86,33 @@ function 06_remote_require () {
   bake_echo_test "remote require successful"
 }
 
+bake_test 07_echo_colors
+function 07_echo_colors () {
+  echo "Testing terminal colors"
+  bake_echo_red       "This should be red text"
+  bake_echo_lred      "This should be 'light' red text"
+  bake_echo_blue      "This should be blue text"
+  bake_echo_lblue     "This should be 'light' blue text"
+  bake_echo_green     "This should be green text"
+  bake_echo_lgreen    "This should be 'light' green text"
+  bake_echo_yellow    "This should be yellow text"
+  bake_echo_lgray     "This should be 'light' gray text"
+  bake_echo_dgray     "This should be 'dark' gray text"
+  bake_echo_cyan      "This should be cyan text"
+  bake_echo_lcyan     "This should be 'light' cyan text"
+  bake_echo_magenta   "This should be magenta text"
+  bake_echo_lmagenta  "This should be 'light' magenta text"
+
+  echo             -n "On One Line: "
+  bake_echo_red    -n "red"
+  bake_echo_lred   -n " and lred"
+  bake_echo_blue   -n " and blue"
+  bake_echo_lblue  -n " and lblue"
+  bake_echo_green  -n " and green"
+  bake_echo_lgreen -n " and lgreen"
+  echo " and the end of the line"
+}
+
 bake_task all
 function all () {
   bake_log_level fatal

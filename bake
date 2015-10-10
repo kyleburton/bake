@@ -11,6 +11,13 @@ BAKE_COLOR_BLUE=""
 BAKE_COLOR_LBLUE=""
 BAKE_COLOR_GREEN=""
 BAKE_COLOR_LGREEN=""
+BAKE_COLOR_YELLOW=""
+BAKE_COLOR_MAGENTA=""
+BAKE_COLOR_LMAGENTA=""
+BAKE_COLOR_CYAN=""
+BAKE_COLOR_LCYAN=""
+BAKE_COLOR_LGRAY=""
+BAKE_COLOR_DGRAY=""
 BAKE_URL="https://raw.githubusercontent.com/kyleburton/bake/master/bake"
 
 BAKE_LOG_LEVEL_NONE=0  # none
@@ -354,20 +361,79 @@ function bake_init () {
     BAKE_COLOR_LBLUE="\e[01;34m"
     BAKE_COLOR_GREEN="\e[00;32m"
     BAKE_COLOR_LGREEN="\e[01;32m"
+    BAKE_COLOR_YELLOW="\e[00;33m"
+    BAKE_COLOR_MAGENTA="\e[00;35m"
+    BAKE_COLOR_LMAGENTA="\e[00;95m"
+    BAKE_COLOR_CYAN="\e[00;36m"
+    BAKE_COLOR_LCYAN="\e[00;96m"
+    BAKE_COLOR_LGRAY="\e[00;37m"
+    BAKE_COLOR_DGRAY="\e[00;90m"
   fi
 }
 
-function bake_echo_red () {
-  echo -e "${BAKE_COLOR_RED}$@${BAKE_COLOR_NORMAL}"
+function bake_color_echo () {
+  local color="$1"
+  local opts="-e"
+  shift
+  while [[ "$1" == -* ]]; do
+    opts="$opts $1"
+    shift
+  done
+  echo $opts "${color}$@${BAKE_COLOR_NORMAL}"
 }
 
-function bake_echo_blue () {
-  echo -e "${BAKE_COLOR_BLUE}$@${BAKE_COLOR_NORMAL}"
+function bake_echo_red      () {
+  bake_color_echo "$BAKE_COLOR_RED" "$@"
 }
 
-function bake_echo_green () {
-  echo -e "${BAKE_COLOR_GREEN}$@${BAKE_COLOR_NORMAL}"
+function bake_echo_lred     () {
+  bake_color_echo "$BAKE_COLOR_LRED" "$@"
 }
+
+function bake_echo_blue     () {
+  bake_color_echo "$BAKE_COLOR_BLUE" "$@"
+}
+
+function bake_echo_lblue    () {
+  bake_color_echo "$BAKE_COLOR_LBLUE" "$@"
+}
+
+function bake_echo_green    () {
+  bake_color_echo "$BAKE_COLOR_GREEN" "$@"
+}
+
+function bake_echo_lgreen   () {
+  bake_color_echo "$BAKE_COLOR_LGREEN" "$@"
+}
+
+function bake_echo_yellow   () {
+  bake_color_echo "$BAKE_COLOR_YELLOW" "$@"
+}
+
+function bake_echo_magenta  () {
+  bake_color_echo "$BAKE_COLOR_MAGENTA" "$@"
+}
+
+function bake_echo_lmagenta () {
+  bake_color_echo "$BAKE_COLOR_LMAGENTA" "$@"
+}
+
+function bake_echo_cyan     () {
+  bake_color_echo "$BAKE_COLOR_CYAN" "$@"
+}
+
+function bake_echo_lcyan    () {
+  bake_color_echo "$BAKE_COLOR_LCYAN" "$@"
+}
+
+function bake_echo_lgray    () {
+  bake_color_echo "$BAKE_COLOR_LGRAY" "$@"
+}
+
+function bake_echo_dgray    () {
+  bake_color_echo "$BAKE_COLOR_DGRAY" "$@"
+}
+
 
 function bake_log_debug () {
   if [ $BAKE_LOG_LEVEL -ge $BAKE_LOG_LEVEL_DEBUG ]; then
