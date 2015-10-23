@@ -113,6 +113,14 @@ function 07_echo_colors () {
   echo " and the end of the line"
 }
 
+bake_task 08_catch_failed_require
+function 08_catch_failed_require () {
+  bake_echo_green "NB: this test actually exits, so it can't be part of the normal suite."
+  bake_echo_green "You should see a RED message 'I fail on require' and a message indicating where the error occurred, and then no more"
+  bake_require lib2/fail-on-require.sh
+  bake_echo_green "This is after the require, if you see this then the test failed."
+}
+
 bake_task all
 function all () {
   bake_log_level fatal

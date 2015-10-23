@@ -93,7 +93,9 @@ function bake_require_from_fs () {
     local fname="$path/$file"
     if [ -e "$fname" ]; then
       BAKE_LIBS["$file"]="$fname"
+      trap "bake_echo_red 'Error loading require: $fname'" EXIT
       source $fname
+      trap EXIT # clear the trap
       return 0
     fi
 
@@ -154,7 +156,9 @@ function bake_require_from_url () {
     bake_echo_red "Require not found: $url => $fspath"
   fi
 
+  trap "bake_echo_red 'Error loading require: $fspath'" EXIT
   source $fspath
+  trap EXIT # clear the trap
 }
 
 # sources a library
