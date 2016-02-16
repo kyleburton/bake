@@ -10,7 +10,7 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
     curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
     chmod 755 $HOME/bin/bake
 
-NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as of 2016) versions of OS X have a bash that ake is incompatible with.  You can easily install a modern supported version of bash via [homebrew](http://brew.sh/) and then either [set it as your shell](http://johndjameson.com/blog/updating-your-shell-with-homebrew/) or change the first line of the bake script to point to the bash you installed via homebrew.
+NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as of 2016) versions of OS X have a bash that bke is incompatible with.  You can easily install a modern supported version of bash via [homebrew](http://brew.sh/) and then either [set it as your shell](http://johndjameson.com/blog/updating-your-shell-with-homebrew/) or change the first line of the bake script to point to the bash you installed via homebrew.
 
 ## Example Bakefile
 

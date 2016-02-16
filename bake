@@ -303,6 +303,25 @@ function bake_upgrade () {
   chmod 755 $0
 }
 
+function bake_create_bakefile () {
+  if [ ! -e Bakefile ]; then
+    cat > Bakefile <<END
+#!/usr/bin/env bash
+
+# bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
+
+bake_task get-started "Get started by editing this Bakefile"
+function get-started () {
+  if [ -n "$EDITOR" ]; then
+    "$EDITOR" Bakefile
+  else
+    vim Bakefile
+  fi
+}
+END
+  fi
+}
+
 function bake_run () {
   local task="${1:-}"
   if [ -n "$task" ]; then
@@ -315,6 +334,11 @@ function bake_run () {
   if [ ! -e "$bakefile" ]; then
     if [ "$task" == upgrade ]; then
       bake_upgrade
+      return 0
+    fi
+
+    if [ "$task" == init ]; then
+      bake_create_bakefile
       return 0
     fi
 
