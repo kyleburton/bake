@@ -303,6 +303,23 @@ function bake_upgrade () {
   chmod 755 $0
 }
 
+function bake_update () {
+  if [ ! -d $HOME/.bake/packages ]; then
+    bake_echo_yellow "No libraries found in ~/.bake, nothing to upgrade"
+    exit 0
+  fi
+
+  cd $HOME/.bake/packages
+  for path in $(find . -name .git -type d); do
+    local dname="$(dirname $path)"
+    bake_echo_green "UPDATE: $path => $dname"
+    pushd $dname
+    git checkout .
+    git pull
+    popd
+  done
+}
+
 function bake_create_bakefile () {
   if [ ! -e Bakefile ]; then
     cat > Bakefile <<END
@@ -366,6 +383,11 @@ function bake_run () {
 
   if [ "$task" == upgrade ]; then
     bake_upgrade
+    return 0
+  fi
+
+  if [ "$task" == update ]; then
+    bake_update
     return 0
   fi
 
