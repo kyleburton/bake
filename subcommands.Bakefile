@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+bake_push_libdir $(bake_bakefile_dir)/test/lib
+bake_require mylib
+
+#echo $BAKEPATH
+#echo ${BAKE_TASK_DESCRIPTIONS[foo]}
+#exit 0
+
+# bake_default_task foo
+
+bake_supertask docker "Docker Helper utils"
+
+bake_subtask docker ps "Show process list"
+function docker-ps () {
+  echo "Run docker ps"
+}
+
+
+bake_task do-something "Testing task w/the same prefix as another task"
+function do-something () {
+  echo "This is do-something $@"
+}
