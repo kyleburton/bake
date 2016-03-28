@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -Eeu
+set -Eeu -o pipefail
 
 # TODO: detect if we're being sourced or if we're being executed
 BAKE_VERSION="2014-11-05"
@@ -37,8 +37,12 @@ BAKEPATH="${BAKEPATH:-.}"
 BAKE_PACKAGES_PATH="$HOME/.bake/packages"
 
 BAKE_DEFAULT_TASK=""
+BAKE_TASK_SEP="-"
 declare -A BAKE_TASKS
+declare -A BAKE_SUPERTASKS
+declare -A BAKE_SUBTASKS
 declare -A BAKE_TASK_DESCRIPTIONS
+declare -A BAKE_SUPERTASK_DESCRIPTIONS
 declare -A BAKE_LIBS
 
 function bake_push_libdir () {
@@ -93,7 +97,7 @@ function bake_require_from_fs () {
     local fname="$path/$file"
     if [ -e "$fname" ]; then
       BAKE_LIBS["$file"]="$fname"
-      trap "bake_echo_red 'Error loading require: $fname'" EXIT
+      trap "bake_echo_red 'Error[bake_require_from_fs] loading require: $fname'" EXIT
       source $fname
       trap EXIT # clear the trap
       return 0
@@ -107,7 +111,7 @@ function bake_require_from_fs () {
     fi
   done
 
-  echo "Error: unable to require $file! (not found on BAKEPATH)"
+  echo "Error[bake_require_from_fs]: unable to require $file! (not found on BAKEPATH)"
   return 1
 }
 
@@ -152,11 +156,11 @@ function bake_require_from_url () {
   bake_package_install "$url"
 
   if [ ! -e "$fspath" ]; then
-    echo "Sorry, after cloneing / fetching and checking out, $fspath still doesn't exist"
+    echo "Error[bake_require_from_url]: Sorry, after clone, fech and check out, $fspath still doesn't exist"
     bake_echo_red "Require not found: $url => $fspath"
   fi
 
-  trap "bake_echo_red 'Error loading require: $fspath'" EXIT
+  trap "bake_echo_red 'Error[bake_require_from_url] loading require: $fspath'" EXIT
   source $fspath
   trap EXIT # clear the trap
 }
@@ -178,25 +182,78 @@ function bake_require_all () {
   done
 }
 
+# bake_task taskname ["description"]
 function bake_task () {
   local name="${1:-}"
   local short_desc="${2:-No Description for task: $name}"
   if [ -z "$name" ]; then
-    echo "Error: you must supply a task name!"
+    echo "Error[bake_task]: you must supply a task name!"
     return 1
   fi
   BAKE_TASKS[$name]="ok"
   BAKE_TASK_DESCRIPTIONS[$name]="$short_desc"
 }
 
+function bake_subtask () {
+  local supertask_name="${1:-}"
+  local subtask_name="${2:-}"
+  local short_desc="${3:-No Description for task: $supertask_name $subtask_name}"
+
+  if [ -z "$supertask_name" ]; then
+    echo "Error[bake_subtask]: you must supply a [super] task name!"
+    return 1
+  fi
+
+  if [ -z "$subtask_name" ]; then
+    echo "Error[bake_subtask]: you must supply a [sub] task name!"
+    return 1
+  fi
+
+  local tname="$supertask_name$BAKE_TASK_SEP$subtask_name"
+  BAKE_TASKS[$tname]="ok"
+  BAKE_SUPERTASKS[$supertask_name]="ok"
+  BAKE_SUBTASKS[$tname]="ok"
+  BAKE_TASK_DESCRIPTIONS[$tname]="$short_desc"
+}
+
+function bake_supertask () {
+  local supertask_name="${1:-}"
+  local short_desc="${2:-No Description for task: $supertask_name}"
+
+  if [ -z "$supertask_name" ]; then
+    echo "Error[bake_subtask]: you must supply a [super] task name!"
+    return 1
+  fi
+
+  BAKE_SUPERTASKS[$supertask_name]="ok"
+  BAKE_SUPERTASK_DESCRIPTIONS[$supertask_name]="$short_desc"
+}
+
 function bake_task_short_desc () {
   local name="${1:-}"
-  echo "${BAKE_TASK_DESCRIPTIONS[$name]}" | head -n 1
+  local descr="$(echo "${BAKE_TASK_DESCRIPTIONS[$name]:-}" | head -n 1)"
+  if [ -z "$descr" ]; then
+    echo "${BAKE_SUPERTASK_DESCRIPTIONS[$name]:-}" | head -n 1
+  else
+    echo "$descr" | head -n 1 
+  fi
 }
 
 function bake_is_registered_task () {
   local name="$1"
   local value="${BAKE_TASKS[$name]:-}"
+  test "$value" = "ok"
+}
+
+function bake_is_registered_subtask () {
+  local name="$1"
+  local value="${BAKE_SUBTASKS[$name]:-}"
+  test "$value" = "ok"
+}
+
+function bake_is_registered_supertask () {
+  local name="$1"
+  local value="${BAKE_SUPERTASKS[$name]:-}"
   test "$value" = "ok"
 }
 
@@ -245,27 +302,53 @@ function bake_find_bakefile () {
 function bake_inernal_help () {
   echo "$0 task [arg ...]"
   echo ""
-  echo "Tasks are taken from the file Bakefile (or bakefile) in the $PWD."
+  echo "Hi there!  Tasks are taken from the file Bakefile (or bakefile) in the $PWD."
   echo "You can specify an alternate Bakefile by setting BAKEFILE:"
   echo ""
   echo "  BAKEFILE=\"my.Bakefile\" bake"
   echo ""
+  echo "The internal commands that bake supports are:"
+  echo ""
+  echo "   init        Creates a skeleton Bakefile"
+  echo "   update      Updates libraries (see ~/.bake)."
+  echo "   upgrade     Refreshes bake itself."
 }
 
 function bake_sorted_task_list () {
-  for task in "${!BAKE_TASKS[@]}"; do
+  (
+   for task in "${!BAKE_TASKS[@]}"; do
+     if ! bake_is_registered_subtask $task; then
+       echo $task
+     fi
+   done;
+   for task in "${!BAKE_SUPERTASKS[@]}"; do
+     echo $task
+   done
+  ) | sort -u
+}
+
+function bake_sorted_subtask_list () {
+  for task in "${!BAKE_SUBTASKS[@]}"; do
     echo $task
-  done | sort
+  done | sort -u
 }
 
 function bake_show_matching_tasks () {
   local unknown_task="${1:-}"
   local matches=""
   #for task in "${!BAKE_TASKS[@]}"; do
+
   for task in $(bake_sorted_task_list); do
     if [[ "$task" == *$unknown_task* ]]; then
       matches="$matches $task"
       printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+      if bake_is_registered_supertask $task; then
+        for stask in $(bake_sorted_subtask_list); do
+          if [[ "$stask" == $task-* ]]; then
+            printf "    %-30s %s\n" "$stask" "$(bake_task_short_desc $stask)"
+          fi
+        done
+      fi
     fi
   done
 
@@ -278,7 +361,11 @@ function bake_show_matching_tasks () {
 
 function bake_show_all_tasks () {
   for task in $(bake_sorted_task_list); do
-    printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+    if bake_is_registered_supertask $task; then
+      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+    else
+      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc $task)"
+    fi
   done
 }
 
@@ -299,8 +386,9 @@ function bake_bakefile_help () {
 }
 
 function bake_upgrade () {
-  curl -o $0 "$BAKE_URL"
-  chmod 755 $0
+  curl -o $0.new "$BAKE_URL"
+  chmod 755 $0.new
+  mv $0.new $0
 }
 
 function bake_update () {
@@ -349,17 +437,17 @@ function bake_run () {
   local bakefile="$(bake_find_bakefile)"
 
   if [ ! -e "$bakefile" ]; then
-    if [ "$task" == upgrade ]; then
+    if [ "$task" == "upgrade" ]; then
       bake_upgrade
       return 0
     fi
 
-    if [ "$task" == init ]; then
+    if [ "$task" == "init" ]; then
       bake_create_bakefile
       return 0
     fi
 
-    echo "Error: could not locate a Bakefile!"
+    echo "Error[bake_run]: could not locate a Bakefile!"
     echo ""
     bake_inernal_help
     return 1
@@ -374,6 +462,17 @@ function bake_run () {
       $task "$@"
       exit $?
     fi
+    # TODO: if it's a supertask and no subtask exists, show help for the supertask
+    if bake_is_registered_supertask "$task"; then
+      if [ -n "${1:-}" ]; then
+        local tname="$task-$1"
+        shift
+        if bake_is_registered_task "$tname"; then
+          $tname "$@"
+          exit $?
+        fi
+      fi
+    fi
   fi
 
   if [ -n "$BAKE_DEFAULT_TASK" ]; then
@@ -386,7 +485,7 @@ function bake_run () {
     return 0
   fi
 
-  if [ "$task" == update ]; then
+  if [ "$task" == "update" ]; then
     bake_update
     return 0
   fi

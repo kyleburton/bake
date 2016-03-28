@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -Eeu
+set -Eeu -o pipefail
 
 # TODO: detect if we're being sourced or if we're being executed
 BAKE_VERSION="2014-11-05"
