@@ -128,12 +128,7 @@ Default your required task arguments to the empty string, then test if they are 
 
 ## License
 
-Copyright (C) 2014 Kyle Burton &lt;kyle.burton@gmail.com&gt;
+Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
-## TODO
-
-* `bake_require_all path` : recursively load all the files under `path`
-* implement dependency tracking, something like: `bake_deps a b c` where `bake_deps` just runs the deps and tracks if they've been run already.
-* how can we support namespaces for tasks?
