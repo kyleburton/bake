@@ -69,13 +69,14 @@ function bake_root_dir () {
 }
 
 function bake_bakefile_dir () {
-  dirname $BAKEFILE
+  dirname "$BAKEFILE"
 }
 
 BAKE_ROOT_DIR="$(bake_root_dir)"
 
 function bake_looks_like_url () {
   local thing="$1"
+
   if [[ $thing == http://* ]]; then
     return 0
   fi
@@ -235,7 +236,7 @@ function bake_task_short_desc () {
   if [ -z "$descr" ]; then
     echo "${BAKE_SUPERTASK_DESCRIPTIONS[$name]:-}" | head -n 1
   else
-    echo "$descr" | head -n 1 
+    echo "$descr" | head -n 1
   fi
 }
 
@@ -260,9 +261,9 @@ function bake_is_registered_supertask () {
 function bake_cd () {
   local path="${1:-}"
   if [ -z "$path" ]; then
-    cd $(dirname $BAKEFILE)
+    cd $(dirname "$BAKEFILE")
   else
-    cd $(dirname $BAKEFILE)/$path
+    cd $(dirname "$BAKEFILE")/$path
   fi
 }
 
@@ -409,8 +410,8 @@ function bake_update () {
 }
 
 function bake_create_bakefile () {
-  if [ ! -e Bakefile ]; then
-    cat > Bakefile <<END
+  if [ ! -e "$BAKEFILE" ]; then
+    cat > "$BAKEFILE" <<END
 #!/usr/bin/env bash
 
 # bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
