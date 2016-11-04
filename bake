@@ -410,8 +410,8 @@ function bake_update () {
 }
 
 function bake_create_bakefile () {
-  if [ ! -e "$BAKEFILE" ]; then
-    cat > "$BAKEFILE" <<END
+  if [ ! -e "Bakefile" ]; then
+    cat > "Bakefile" <<END
 #!/usr/bin/env bash
 
 # bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
