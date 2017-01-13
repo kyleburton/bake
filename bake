@@ -313,6 +313,7 @@ function bake_inernal_help () {
   echo "   init        Creates a skeleton Bakefile"
   echo "   update      Updates libraries (see ~/.bake)."
   echo "   upgrade     Refreshes bake itself."
+  echo "   version     Show the version of bake!"
 }
 
 function bake_sorted_task_list () {
@@ -392,6 +393,10 @@ function bake_upgrade () {
   mv $0.new $0
 }
 
+function bake_version () {
+  echo "$BAKE_VERSION"
+}
+
 function bake_update () {
   if [ ! -d $HOME/.bake/packages ]; then
     bake_echo_yellow "No libraries found in ~/.bake, nothing to upgrade"
@@ -438,6 +443,11 @@ function bake_run () {
   local bakefile="$(bake_find_bakefile)"
 
   if [ ! -e "$bakefile" ]; then
+    if [ "$task" == "version" ]; then
+      bake_version
+      return 0
+    fi
+
     if [ "$task" == "upgrade" ]; then
       bake_upgrade
       return 0

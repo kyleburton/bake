@@ -2,8 +2,15 @@
 
 # bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
 
+function build::update-version () {
+  local infname="$1"
+  local vstring="$2"
+
+  sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+}
+
 function build::curr-git-tag {
-  local curr_tag="$(git tag -l | sort | head -n 1)"
+  local curr_tag="$(git tag -l | sort | tail -n 1)"
   if [ -z "$curr_tag" ]; then
       echo "1.0.0"
   fi
@@ -45,6 +52,8 @@ function make-release () {
 
   cp README.md Changes "./release/$relname/"
   cp bake bake-completion.sh "./release/$relname/bin"
+
+  build::update-version "./release/$relname/bin/bake" "$next_tag"
 
   tar -C ./release -czvf $bundle_name $relname
   bake_echo_yellow "TODO: update Changes using the current date + git log using curr ($curr_tag) vs next ($next_tag) tags"
