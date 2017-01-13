@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+# bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
+
+function build::curr-git-tag {
+  local curr_tag="$(git tag -l | sort | head -n 1)"
+  if [ -z "$curr_tag" ]; then
+      echo "1.0.0"
+  fi
+  echo "$curr_tag"
+}
+
+function build::next-git-tag {
+  local curr_tag="$(build::curr-git-tag)"
+
+  # major.minor.patch <- lets increment the patch
+  local vmajor="$(echo $curr_tag | cut -f1 -d.)"
+  local vminor="$(echo $curr_tag | cut -f2 -d.)"
+  local vpatch="$(echo $curr_tag | cut -f3 -d.)"
+
+  echo "$vmajor.$vminor.$(($vpatch + 1))"
+}
+
+bake_task make-release "Cut a release"
+function make-release () {
+  local no_op="${1:-}"
+  local curr_tag="$(build::curr-git-tag)"
+  local next_tag="$(build::next-git-tag)"
+
+  local relname="bake-$next_tag"
+  local bundle_name="$relname.tgz"
+
+  bake_echo_green "curr_tag=$curr_tag"
+  bake_echo_green "next_tag=$next_tag"
+
+  if [ -n "$no_op" ]; then
+      exit 0
+  fi
+
+  (
+  cd ..
+  git tag "$next_tag"
+  test -d ./release || mkdir ./release
+  test -d "./release/$relname/bin" || mkdir -p "./release/$relname/bin"
+
+  cp README.md Changes "./release/$relname/"
+  cp bake bake-completion.sh "./release/$relname/bin"
+
+  tar -C ./release -czvf $bundle_name $relname
+  bake_echo_yellow "TODO: update Changes using the current date + git log using curr ($curr_tag) vs next ($next_tag) tags"
+  bake_echo_yellow "TODO: automate the process of creating the release in GH: https://help.github.com/articles/creating-releases/"
+  )
+}
+
+bake_task clean "Clean up release archives and working directory"
+function clean () {
+  (
+  cd ..
+  rm -rf ./release
+  rm -f bake-*.*.*.tgz
+  )
+}
