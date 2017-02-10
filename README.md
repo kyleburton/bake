@@ -33,12 +33,12 @@ NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as 
 Then run bake:
 
     $ bake
-    
+
     bake task [arg ...]
-    
+
       foo                            The foo command just echos it's arguments
-    
-    
+
+
     $ bake foo this that
     foo: args='this that'
 
@@ -78,7 +78,7 @@ This is a colon separated list of paths that `bake_require` uses to locate libra
 
 #### Configuration at the top
 
-Factor out configuration and put it at the top of your Bakefile. 
+Factor out configuration and put it at the top of your Bakefile.
 
 ```sh
 #!/usr/bin/env bake
@@ -119,9 +119,9 @@ If there is either a lot of configuraiton, or it's complex and can't really be d
 
 Use exit codes to indicate success or failure.  If you write a function that detects an error and exits, use 'return 1' so the calling shell knows that your task did not succeed.  This is important for your CI server and any other automation around your Bakefile.
 
-Write task descriptions.  
+Write task descriptions.
 
-Use your configuration variables in your task descriptions.  
+Use your configuration variables in your task descriptions.
 
 Default your required task arguments to the empty string, then test if they are zero length and provide a sensible error message (and return an error code).
 
@@ -132,3 +132,10 @@ Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
+
+# Creating a Release
+
+```
+cd build
+bake make-release
+```
