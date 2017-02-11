@@ -6,13 +6,44 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
 ## Installation
 
+### Via [`homebrew`](http://brew.sh/) or [`linuxbrew`](http://linuxbrew.sh/)
+
+I (Kyle Burton) have a custom [brew tap](https://github.com/kyleburton/homebrew-kyleburton), to use it to install bake do the following on a system where you already have `brew` installed:
+
+```
+brew tap --full github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
+
+# recommended on OS X
+brew install github/kyleburton/bake --without-bash
+
+# recommended on Linux
+brew install github/kyleburton/bake
+```
+
+Keeping up with new releases can then easily done with brew:
+
+```
+brew update
+brew upgrade
+```
+
+### Manual
+
     test -d $HOME/bin || mkdir $HOME/bin
     curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
     chmod 755 $HOME/bin/bake
 
 NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as of 2016) versions of OS X have a bash that bake is incompatible with.  You can easily install a modern supported version of bash via [homebrew](http://brew.sh/) and then either [set it as your shell](http://johndjameson.com/blog/updating-your-shell-with-homebrew/) or change the first line of the bake script to point to the bash you installed via homebrew.
 
-## Example Bakefile
+# Getting Started
+
+You can have bake bootstrap a skeleton bakefile in your current working directory by running:
+
+```
+bake init
+```
+
+## Lets Make Your first `Bakefile`!
 
     $ mkdir test/lib
     $ cat >> test/lib/mylib.sh
@@ -41,7 +72,6 @@ Then run bake:
 
     $ bake foo this that
     foo: args='this that'
-
 
 
 ## `Bakefile`
