@@ -74,9 +74,9 @@ Then run bake:
     foo: args='this that'
 
 
-## `Bakefile`
+## The "API", aka what shell functions can you call from your `Bakefile`?
 
-`bake` is controlled by a Bakefile (similarly to make and rake).  This file is just a bash script.  You define functions for your tasks and register them with `bake`.
+`bake` is controlled by a Bakefile (similarly to make and rake).  This file is just a bash script.  You define functions for your tasks and register them with `bake`.  `bake` itself is essentially a set of shell functions and you can (and are encouraged) to use them from within your `Bakefile`s.  This is an overview of the most usefule ones (feel free to look around inside `bake` and see what else is there).
 
 ### `bake_task task-name "task-description"`
 
@@ -98,9 +98,11 @@ Pushes a file system path onto the end of `BAKEPATH`.
 
 Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
 
-## Environment
+# Libraries!
 
-### BAKEPATH
+Some of the goals I had for for `bake` are for it to encourage best practices for shell scripting and to encourage re-use by encouraging the creation of small re-useable parts including libraries.  Bake encourages small re-useable functions essentially by requiring the use of shell functions.  It's up to you to break your functions into libraries that can be shared across your projects.  Have a look at the [Best Practices](#best_practices) section below.
+
+### `BAKEPATH`
 
 This is a colon separated list of paths that `bake_require` uses to locate libraries.
 
@@ -156,11 +158,16 @@ Use your configuration variables in your task descriptions.
 Default your required task arguments to the empty string, then test if they are zero length and provide a sensible error message (and return an error code).
 
 
-## License
+# Best Practices
 
-Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
+This section is 'in progress'
 
-Distributed under the Eclipse Public License, the same as Clojure.
+* Fake it till you make it: prefixes as namespaces help avoid collisions, and aid in organization
+* Return instead of exit, but use return values please!
+* Don't put naked shell code in your `Bakefile` or libraries if you can help it!
+* Extract configuration and parameters into environment variables, place these at the top of your script.
+* Use defaults `${MYTHING_VERSION:-1.0.7`
+* Pattern: sub-commands, one function calls another.
 
 
 # Creating a Release
@@ -169,3 +176,12 @@ Distributed under the Eclipse Public License, the same as Clojure.
 cd build
 bake make-release
 ```
+
+
+## License
+
+Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
+
+Distributed under the Eclipse Public License, the same as Clojure.
+
+
