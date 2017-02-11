@@ -1,6 +1,6 @@
 ## bake - bash [mr]ake
 
-Pure bash build framework.  No libraries, no dependencies (in this framework).  Designed in the spirit of rake and make.  I wished for a self-contained tool that did not require any more boostrapping than running curl or a single scp, so I made this.
+Pure bash build framework.  No libraries, no dependencies (in this framework).  Designed in the spirit of rake and make.  I wished for a self-contained tool that did not require any more bootstrapping than running curl or a single scp, so I made this.
 
 The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
@@ -10,7 +10,7 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
 I (Kyle Burton) have a custom [brew tap](https://github.com/kyleburton/homebrew-kyleburton), to use it to install `bake` do the following on a system where you already have `brew` installed:
 
-```bash
+```sh
 brew tap --full github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
 
 # recommended on OS X
@@ -22,7 +22,7 @@ brew install github/kyleburton/bake
 
 Keeping up with new releases can then easily done with brew:
 
-```bash
+```sh
 brew update
 brew upgrade
 ```
@@ -39,23 +39,24 @@ NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as 
 
 You can have `bake` bootstrap a skeleton `Bakefile` in your current working directory by running:
 
-```bash
+```sh
 bake init
 ```
 
 ## Lets Make Your first `Bakefile`!
 
+Organizing code into libraries is recommended, so we're going to start off with showing how to do just that.  We're going to create a place to organize local modules `./test/lib` and create the file `./test/lib/mylib.sh` with our first `bake` task!  This is the 'hello world' for `bake`.
+
     $ mkdir test/lib
-    $ cat >> test/lib/mylib.sh
+    $ cat > test/lib/mylib.sh
     #!/usr/bin/env bash
-    set -eu
-    bake_task foo "The foo command just echos it's arguments"
-    function foo () {
+    bake_task mylib:foo "The foo command just echos it's arguments"
+    function mylib:foo () {
       echo "foo: args='$@'"
     }
     ^D
 
-    $ cat >> Bakefile
+    $ cat > Bakefile
     #!/usr/bin/env bash
     bake_push_libdir $(bake_bakefile_dir)/test/lib
     bake_require mylib
@@ -67,7 +68,7 @@ Then run bake:
 
     bake task [arg ...]
 
-      foo                            The foo command just echos it's arguments
+      mylib:foo                      The foo command just echos it's arguments
 
 
     $ bake foo this that
@@ -76,7 +77,7 @@ Then run bake:
 
 ## The "API", aka what shell functions can you call from your `Bakefile`?
 
-`bake` is controlled by a Bakefile (similarly to make and rake).  This file is just a bash script.  You define functions for your tasks and register them with `bake`.  `bake` itself is essentially a set of shell functions and you can (and are encouraged) to use them from within your `Bakefile`s.  This is an overview of the most usefule ones (feel free to look around inside `bake` and see what else is there).
+`bake` is controlled by a `Bakefile` (similarly to make and rake).  This file is just a bash script.  You define functions for your tasks and register them with `bake`.  `bake` itself is essentially a set of shell functions and you can (and are encouraged) to use them from within your `Bakefile`s.  This is an overview of the most useful ones (feel free to look around inside `bake` and see what else is there).
 
 ### `bake_task task-name "task-description"`
 
@@ -106,11 +107,11 @@ Some of the goals I had for for `bake` are for it to encourage best practices fo
 
 This is a colon separated list of paths that `bake_require` uses to locate libraries.
 
-## Best Practices for writing Bakefiles
+## Best Practices for writing `Bakefiles`
 
 #### Configuration at the top
 
-Factor out configuration and put it at the top of your Bakefile.
+Factor out configuration and put it at the top of your `Bakefile`.
 
 ```sh
 #!/usr/bin/env bake
@@ -145,11 +146,11 @@ $ CFGFNAME=my-config.json bake configure_system
 
 #### Externalize Complex Configuration
 
-If there is either a lot of configuraiton, or it's complex and can't really be defaulted (thus forcing users to create configuraiton before running your tool).
+If there is either a lot of configuration, or it's complex and can't really be defaulted (thus forcing users to create configuration before running your tool).
 
 #### Be Helpful
 
-Use exit codes to indicate success or failure.  If you write a function that detects an error and exits, use 'return 1' so the calling shell knows that your task did not succeed.  This is important for your CI server and any other automation around your Bakefile.
+Use exit codes to indicate success or failure.  If you write a function that detects an error and exits, use 'return 1' so the calling shell knows that your task did not succeed.  This is important for your CI server and any other automation around your `Bakefile`.
 
 Write task descriptions.
 
@@ -160,15 +161,164 @@ Default your required task arguments to the empty string, then test if they are 
 
 # Best Practices
 
-This section is 'in progress'
+This section is chock full of tips for how to get the most out of your `bake` experience!
 
+* Manage the Current Working Directory (`$PWD`) with care
+* Don't re-define built-ins, be thoughtful with `exec`
 * Fake it till you make it: prefixes as namespaces help avoid collisions, and aid in organization
 * Return instead of exit, but use return values please!
 * Don't put naked shell code in your `Bakefile` or libraries if you can help it!
 * Extract configuration and parameters into environment variables, place these at the top of your script.
-* Use defaults `${MYTHING_VERSION:-1.0.7`
-* Pattern: sub-commands, one function calls another.
+* Use defaults `${MYTHING_VERSION:-1.0.7}`
+* `init()`
+* Idempotency is your friend, take the time to make your functions idempotent
 
+## Be thoughtful with your `$PWD`
+
+Use sub-shells, use `pushd` and `popd` (keep in mind that they're noisy).
+
+## Avoid Re-definition of built-ins and standard commands
+
+Besides the redefinition of `bake`s own functions, you should avoid redefinition of any of the `bash` built-ins such as `test` (I've done this, and now I use `run-test` instead of `test`).  If you find that you have a case for redefinition of a standard command, perhaps because you'd like to wrap it with some additional behavior, you can still call out to it with `bash`s `command`:
+
+```sh
+#!/usr/bin/env bash
+ALEMBIC_CONFIG="${ALEMBIC_CONFIG:-config/development.alembic.ini}"
+
+bake_task alembic "Wrapper for database migrations tooling"
+function alembic () {
+  command alembic -c "$ALEMBIC_CONFIG" "$@"
+}
+```
+
+## Namespaces
+
+`bash` technically doesn't have namespaces for functions, yet it allows for periods `.` and colons `:` in the names of shell functions.  Using these allows us to get many of the benefits of namespaces.  
+
+Here's an example of using colons `:` for namespacing
+
+
+```
+# in the file ./lib/mylib.sh
+
+bake_task mylib:hello-word "This is the hello world task!"
+function mylib:hello-word () {
+  bake_echo_green "Hello World!"
+}
+```
+
+## Don't use `exit`, use `return`
+
+`exit` will, as it's supposed to, exit the entire process, terminating your `bake` process.  This is rarely, if ever, what you really want to do from any of your bash functions.  Each of your `bake` tasks should return an explicit error (not zero) or success (zero) value from every branch of the code.
+
+## Don't put naked shell code in your `Bakefile` or libraries if you can help it!
+
+This will end up executing every time the code is required or loaded.  This increases complexity and will make re-use of your code more challenging.
+
+## Configuration at the top
+
+Extract configuration and parameters into environment variables, place these at the top of your script.  This will help anyone looking at your `Bakefile` or libraries understand what configuration options you're using and how to set or override them.  Alternatively supposing a configuration file with environment variables can help mange things when the amount of configuration grows:
+
+```sh
+# config/development.env
+INSTALL_TARGET="/opt/yoyodine.com/skynet"
+SKYNET_VERSION="20730401.b99879213"
+SKYNET_PERSONALITY_MODULE="Serena-Kogan.nnaipkg"
+```
+
+```sh
+#!/usr/bin/env bash
+
+source "${CONFIG:-config/development.env}"
+
+bake_task install "Install the things into $INSTALL_TARGET"
+function install () {
+  bake_echo_green "Installing into $INSTALL_TARGET"
+  ...
+}
+```
+
+```sh
+# use the default configuration:
+bak$ e
+
+# specify an alternative:
+CO$ NFIG=config/sfo-research-site.env bake
+
+# or
+$ export CONFIG=config/sfo-research-site.env
+b$ ake
+```
+
+## Use defaults for your configuration `${MYTHING_VERSION:-1.0.7}`
+
+This is a nice way to support defaults and allow users to override them ad-hoc by setting the environment variables before invoking your bake tasks or loading your library.
+
+## `init()`
+
+Instead of putting initialization in your libraries or `Bakefile` outside of a function, placing it into an `init` function helps keep it organized and ensure it's consistently called from the tasks that need it.  Making it idempotent is another best practice, as you will no longer have to worry about side effects.
+
+```sh
+CONFIG="${CONFIG:-config/development.json}"
+ALEMBIC_CONFIG="${ALEMBIC_CONFIG:-config/development.alembic.ini}"
+
+function init () {
+  if [ -n "${INIT_CALLED:-}" ]; then
+    return 0
+  fi
+
+  # check configuration
+  if [ ! -e "$CONFIG" ]; then
+    bake_echo_red "Please copy config/config-template.json to $CONFIG"
+    bake_echo_red "and fill in the required values (such as the databse connection parameters)"
+    return 1
+  fi
+
+  if [ ! -e "$ALEMBIC_CONFIG" ]; then
+    bake_echo_red "Please copy config/alembic-config-template.ini to $ALEMBIC_CONFIG"
+    bake_echo_red "and fill in the required values (such as the databse connection parameters)"
+    return 1
+  fi
+
+  # make sure our pre-requisits are installed
+  pip install -r requirements.txt
+
+  INIT_CALLED="true"
+  return 0
+}
+
+
+bake_task alembic "Wrapper for database migrations tooling"
+function alembic () {
+  init
+  command alembic -c "$ALEMBIC_CONFIG" "$@"
+}
+
+bake_task dev:run-server "Run the server in development mode"
+function dev:run-server () {
+  python -m skynet.ai.servcie
+}
+```
+
+## Idempotency is your friend, take the time to make your functions idempotent
+
+This is simplest through judicious use of `bash`s built-ins like `test` to look for expected output files before executing commands:
+
+```sh
+bake_task download-package "Download the package $MYPKG_URL"
+function download-package () {
+  local pkgfile="$(basename "$MYPKG_URL")"
+  test -f "$pkgfile" || curl "$MYPKG_URL" > "$pkgfile"
+}
+```
+
+# Further Reading
+
+`bake` is at its core a collection of shell function and strongly followed conventions.  Learning `bash` is therefor a great idea for getting the most out of `bake`.  This has the added benefit of becoming great at that venerable, widely applicable skill: shell scripting.
+
+* https://www.quora.com/What-are-some-good-books-for-learning-Linux-bash-or-shell-scripting
+* http://guide.bash.academy/
+* http://www.tldp.org/LDP/Bash-Beginners-Guide/html/
 
 # Creating a Release
 
@@ -177,8 +327,11 @@ cd build
 bake make-release
 ```
 
+# Contributors
 
-## License
+* Kyle Burton &lt;kyle.burton@gmail.com&gt;
+
+# License
 
 Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
 
