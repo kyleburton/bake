@@ -20,13 +20,6 @@ brew install github/kyleburton/bake --without-bash
 brew install github/kyleburton/bake
 ```
 
-Keeping up with new releases can then easily done with brew:
-
-```sh
-brew update
-brew upgrade
-```
-
 ### Manual
 
     test -d $HOME/bin || mkdir $HOME/bin
