@@ -105,7 +105,7 @@ Some of the goals I had for for `bake` are for it to encourage best practices fo
 This is a colon separated list of paths that `bake_require` uses to locate libraries.
 
 
-# `bake` Best Practices
+# Best Practices
 
 This section is chock full of tips for how to get the most out of your `bake` experience!
 
