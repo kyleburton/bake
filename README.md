@@ -14,7 +14,7 @@ I (Kyle Burton) have a custom [brew tap](https://github.com/kyleburton/homebrew-
 brew tap --full github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
 
 # recommended on OS X (bake depends on of bash supporting arrays)
-brew install github/kyleburton/bake
+brew install kyleburton/kyleburton/bake
 
 # recommended on Linux (Linux already has a good bash)
 brew install github/kyleburton/bake --without-bash
