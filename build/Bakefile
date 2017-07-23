@@ -69,3 +69,8 @@ function clean () {
   rm -f bake-*.*.*.tgz
   )
 }
+
+bake_task shellcheck "Run shellcheck on bake"
+function shellcheck () {
+  command shellcheck ../bake
+}
