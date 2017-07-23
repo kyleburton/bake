@@ -1,3 +1,5 @@
+2017-07-23T19:58:49Z - releasing 1.0.6
+  Linted with shellcheck : https://github.com/koalaman/shellcheck
 2014-11-03T16:26:34Z
   When an unknown task is provided on the command line, bake now prints out only 
   matching (via substring) registered tasks.

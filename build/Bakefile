@@ -6,7 +6,9 @@ function build::update-version () {
   local infname="$1"
   local vstring="$2"
 
-  sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+  bake_echo_green "build::update-version: infname=$infname vstring=$vstring PWD=$PWD"
+  #sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+  sed -i "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
 }
 
 function build::curr-git-tag {
@@ -43,6 +45,8 @@ function make-release () {
   if [ -n "$no_op" ]; then
       exit 0
   fi
+
+  shellcheck
 
   (
   cd ..
