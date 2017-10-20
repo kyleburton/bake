@@ -160,7 +160,7 @@ function bake_require_git () {
     git co "$tag"
   fi
 
-  popd
+  popd > /dev/null
 
   # translate the require path to local fs path
   # source it!
@@ -192,7 +192,7 @@ function bake_package_install () {
   git checkout .
   git pull
   git checkout "$tag"
-  popd
+  popd > /dev/null
 }
 
 function bake_require_from_url () {
@@ -474,7 +474,7 @@ function bake_update () {
     pushd "$dname"
     git checkout .
     git pull
-    popd
+    popd > /dev/null
   done
 }
 
