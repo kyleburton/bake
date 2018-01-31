@@ -45,7 +45,7 @@ Organizing code into libraries is recommended, so we're going to start off with 
 $ test -d test/lib || mkdir test/lib
 $ cat > test/lib/mylib.sh
 #!/usr/bin/env bash
-bake_task mylib:foo "The foo command just echos it's arguments"
+bake_task mylib:foo "The foo command just echo's its arguments"
 function mylib:foo () {
   echo "foo: args='$@'"
 }
@@ -65,7 +65,7 @@ $ bake
 
 bake task [arg ...]
 
-  mylib:foo                      The foo command just echos it's arguments
+  mylib:foo                      The foo command just echo's its arguments
 
 
 $ bake foo this that
