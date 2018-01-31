@@ -13,7 +13,7 @@ I (Kyle Burton) have a custom [brew tap](https://github.com/kyleburton/homebrew-
 ```sh
 brew tap --full github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
 
-# recommended on OS X (bake depends on of bash supporting arrays)
+# recommended on OS X (bake depends on versions of bash that support arrays)
 brew install kyleburton/kyleburton/bake
 
 # recommended on Linux (Linux already has a good bash)
