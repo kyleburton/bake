@@ -406,11 +406,11 @@ function bake_show_matching_tasks () {
   for task in $(bake_sorted_task_list); do
     if [[ "$task" == *$unknown_task* ]]; then
       matches="$matches $task"
-      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc "$task")"
+      printf "  %-30s %s\\n" "$task" "$(bake_task_short_desc "$task")"
       if bake_is_registered_supertask "$task"; then
         for stask in $(bake_sorted_subtask_list); do
           if [[ "$stask" == $task-* ]]; then
-            printf "    %-30s %s\n" "$stask" "$(bake_task_short_desc "$stask")"
+            printf "    %-30s %s\\n" "$stask" "$(bake_task_short_desc "$stask")"
           fi
         done
       fi
@@ -427,9 +427,9 @@ function bake_show_matching_tasks () {
 function bake_show_all_tasks () {
   for task in $(bake_sorted_task_list); do
     if bake_is_registered_supertask "$task"; then
-      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc "$task")"
+      printf "  %-30s %s\\n" "$task" "$(bake_task_short_desc "$task")"
     else
-      printf "  %-30s %s\n" "$task" "$(bake_task_short_desc "$task")"
+      printf "  %-30s %s\\n" "$task" "$(bake_task_short_desc "$task")"
     fi
   done
 }
@@ -581,20 +581,20 @@ function bake_init () {
   if [ -t 1 ]; then
     # shellcheck disable=SC2034
     BAKE_STDOUT_IS_TERMINAL="yes"
-    BAKE_COLOR_NORMAL="\e[00m"
-    BAKE_COLOR_RED="\e[00;31m"
-    BAKE_COLOR_LRED="\e[01;31m"
-    BAKE_COLOR_BLUE="\e[00;34m"
-    BAKE_COLOR_LBLUE="\e[01;34m"
-    BAKE_COLOR_GREEN="\e[00;32m"
-    BAKE_COLOR_LGREEN="\e[01;32m"
-    BAKE_COLOR_YELLOW="\e[00;33m"
-    BAKE_COLOR_MAGENTA="\e[00;35m"
-    BAKE_COLOR_LMAGENTA="\e[00;95m"
-    BAKE_COLOR_CYAN="\e[00;36m"
-    BAKE_COLOR_LCYAN="\e[00;96m"
-    BAKE_COLOR_LGRAY="\e[00;37m"
-    BAKE_COLOR_DGRAY="\e[00;90m"
+    BAKE_COLOR_NORMAL="\\e[00m"
+    BAKE_COLOR_RED="\\e[00;31m"
+    BAKE_COLOR_LRED="\\e[01;31m"
+    BAKE_COLOR_BLUE="\\e[00;34m"
+    BAKE_COLOR_LBLUE="\\e[01;34m"
+    BAKE_COLOR_GREEN="\\e[00;32m"
+    BAKE_COLOR_LGREEN="\\e[01;32m"
+    BAKE_COLOR_YELLOW="\\e[00;33m"
+    BAKE_COLOR_MAGENTA="\\e[00;35m"
+    BAKE_COLOR_LMAGENTA="\\e[00;95m"
+    BAKE_COLOR_CYAN="\\e[00;36m"
+    BAKE_COLOR_LCYAN="\\e[00;96m"
+    BAKE_COLOR_LGRAY="\\e[00;37m"
+    BAKE_COLOR_DGRAY="\\e[00;90m"
   fi
 }
 
