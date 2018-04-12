@@ -34,7 +34,7 @@ BAKE_LOG_LEVEL="${BAKE_LOG_LEVEL:-$BAKE_LOG_LEVEL_INFO}"
 #
 #  The list of directories that bake will search when resolving libraries (via require)
 #
-BAKEPATH="${BAKEPATH:-.}"
+BAKEPATH=${BAKEPATH:+$BAKEPATH:}$PWD
 
 BAKE_PACKAGES_PATH="$HOME/.bake/packages"
 
