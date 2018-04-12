@@ -16,7 +16,8 @@ function build::update-version () {
 }
 
 function build::curr-git-tag {
-  local curr_tag="$(git tag -l | sort | tail -n 1)"
+  # local curr_tag="$(git tag -l | sort | tail -n 1)"
+  local curr_tag="$(git describe --abbrev=0 --tags)"
   if [ -z "$curr_tag" ]; then
       echo "1.0.0"
   fi
