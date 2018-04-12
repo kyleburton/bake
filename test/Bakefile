@@ -121,6 +121,20 @@ function 08_catch_failed_require () {
   bake_echo_green "This is after the require, if you see this then the test failed."
 }
 
+bake_test 09_test_bakepath
+function 09_test_bakepath () {
+  bake_echo_green "This tests that setting a Bakepath works appropriately"
+  BAKEPATH="$PWD/lib" ../bake 09_test_bakepath_helper
+  bake_echo_green "This is after the require, if you see this then the test succeeded."
+}
+
+bake_task 09_test_bakepath_helper "Called by the associated test"
+function 09_test_bakepath_helper () {
+  bake_echo_green "This should be called with the BAKEPATH=\"$PWD\"/lib by the associated test"
+  bake_require lib/mylib.sh
+  bake_require mylib.sh
+}
+
 bake_task all
 function all () {
   bake_log_level fatal
