@@ -96,6 +96,10 @@ Pushes a file system path onto the end of `BAKEPATH`.
 
 Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
 
+## What if I want multiple Bakefiles?
+
+Easy! Make `Bakefile` a directory. Bake treats everything in that directory as a Bakefile.
+
 # Libraries!
 
 Some of the goals I had for for `bake` are for it to encourage best practices for shell scripting and to encourage re-use by encouraging the creation of small re-useable parts including libraries.  Bake encourages small re-useable functions essentially by requiring the use of shell functions.  It's up to you to break your functions into libraries that can be shared across your projects.  Have a look at the [Best Practices](#best-practices) section below.

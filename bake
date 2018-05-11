@@ -499,6 +499,17 @@ END
   fi
 }
 
+function bake_source_bakefile() {
+  bakefile=$1
+  if [[ -d $bakefile ]]; then
+    for f in "$bakefile"/*; do
+      bake_source_bakefile "$f"
+    done
+  else
+    source "$bakefile"
+  fi
+}
+
 function bake_run () {
   local task="${1:-}"
   if [ -n "$task" ]; then
@@ -531,8 +542,7 @@ function bake_run () {
   fi
 
   export BAKEFILE="$bakefile"
-
-  source "$bakefile"
+  bake_source_bakefile "$bakefile"
 
   if [ -n "$task" ]; then
     if bake_is_registered_task "$task"; then

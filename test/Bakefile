@@ -135,6 +135,23 @@ function 09_test_bakepath_helper () {
   bake_require mylib.sh
 }
 
+bake_test 10_test_bakepath_directory
+function 10_test_bakepath_directory () {
+  bake_echo_green "This tests that setting a directory Bakepath works appropriately"
+  tasks=(a b c)
+  paths=(a a/b a/b/c)
+  for i in "${!tasks[@]}"; do
+    task_result=$(BAKEFILE="$PWD/sub" ../bake "bar_task_${tasks[$i]}")
+    if [ "$task_result" = "bar_task_${tasks[$i]}" ]; then
+      bake_echo_green "OK: found nested Bakefile in ${PWD}/sub/${paths[$i]}"
+    else
+      bake_echo_red "ERROR: did not find Bakefile from ${PWD}/sub/${paths[$i]}"
+      return 1
+    fi
+  done
+  bake_echo_green "This is after the bake directory call, if you see this then the test succeeded."
+}
+
 bake_task all
 function all () {
   bake_log_level fatal
