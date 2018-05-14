@@ -331,14 +331,23 @@ function bake_cd () {
 function bake_find_bakefile_impl () {
   local project_root
   project_root="$(pwd)"
-
-  if [ -e "Bakefile" ]; then
+  if [ -f "Bakefile" ]; then
     echo "$project_root/Bakefile"
     return 0
   fi
 
-  if [ -e "bakefile" ]; then
+  if [ -f "bakefile" ]; then
     echo "$project_root/bakefile"
+    return 0
+  fi
+
+  if [ -d "bake" ]; then
+    echo "$project_root/bake"
+    return 0
+  fi
+
+  if [ -d "Bake" ]; then
+    echo "$project_root/Bake"
     return 0
   fi
 

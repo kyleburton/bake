@@ -26,7 +26,7 @@ brew install github/kyleburton/bake --without-bash
     curl https://raw.githubusercontent.com/kyleburton/bake/master/bake > $HOME/bin/bake
     chmod 755 $HOME/bin/bake
 
-NOTE: OS X (the Apple Mac) has been regressing it's version of bash.  Newer (as of 2016) versions of OS X have a bash that `bake` is incompatible with.  `bake` uses (arrays)[http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_02.html], which very old versions of `bash` do not support.  You can easily install a modern supported version of bash via [homebrew](http://brew.sh/) and then either [set it as your shell](http://johndjameson.com/blog/updating-your-shell-with-homebrew/) or change the first line of the `bake` script to point to the bash you installed via homebrew.
+NOTE: OS X (the Apple Mac) has been regressing its version of bash.  Newer (as of 2016) versions of OS X have a bash that `bake` is incompatible with.  `bake` uses (arrays)[http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_02.html], which very old versions of `bash` do not support.  You can easily install a modern supported version of bash via [homebrew](http://brew.sh/) and then either [set it as your shell](http://johndjameson.com/blog/updating-your-shell-with-homebrew/) or change the first line of the `bake` script to point to the bash you installed via homebrew.
 
 # Getting Started
 
@@ -78,7 +78,7 @@ foo: args='this that'
 
 ### `bake_task task-name "task-description"`
 
-This registers a task and it's description so it can be executed and help can be displayed.
+This registers a task and its description so it can be executed and help can be displayed.
 
 ### `bake_default_task task-name`
 
@@ -98,7 +98,7 @@ Searches `BAKEPATH` for the library and sources it, loading the file (executing 
 
 ## What if I want multiple Bakefiles?
 
-Easy! Make `Bakefile` a directory. Bake treats everything in that directory as a Bakefile.
+Easy! Make a directory called `bake`. Bake treats everything in that directory as a Bakefile.
 
 # Libraries!
 

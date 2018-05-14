@@ -6,7 +6,7 @@ TESTS=""
 
 function bake_test () {
   local tname="$1"
-  bake_task $tname
+  bake_task "$tname"
   TESTS="$TESTS $tname"
 }
 
@@ -18,8 +18,8 @@ bake_test 01_find_bakefile_sets_absolute_path
 function 01_find_bakefile_sets_absolute_path () {
   in_test $FUNCNAME
   cd lib
-  test -f $BAKEFILE
-  test -f $(bake_bakefile_dir)/Bakefile
+  test -f "$BAKEFILE"
+  test -f "$(bake_bakefile_dir)/Bakefile"
   cd ..
 }
 
@@ -65,14 +65,14 @@ function 05_looks_like_url () {
   local non_urls="lib/foo.sh nothing another.thing README.md some/directory/path gist.github.com/kyleburton/1234"
   local urls="http://github.com/kyleburton/bake/packages/vim/vim-go https://github.com/kyleburton/bake/packages/vim/vim-go github.com/kyleburton/bake/packages/vim/vim-go"
   for thing in $non_urls; do
-    if bake_looks_like_url $thing; then
+    if bake_looks_like_url "$thing"; then
       bake_echo_red "Expected $thing to not bake_looks_like_url, but it did"
       return 1
     fi
   done
 
   for thing in $urls; do
-    if ! bake_looks_like_url $thing; then
+    if ! bake_looks_like_url "$thing"; then
       bake_echo_red "Expected $thing to bake_looks_like_url, but it didn't"
       return 1
     fi
@@ -150,6 +150,36 @@ function 10_test_bakepath_directory () {
     fi
   done
   bake_echo_green "This is after the bake directory call, if you see this then the test succeeded."
+}
+
+bake_test 11_test_bakepath_directory_impl
+function 11_test_bakepath_directory_impl () {
+  bake_echo_green "This tests that setting an implicit directory bake works appropriately"
+  cd impl/dir
+  local bakepath
+  bakepath=$(bake_find_bakefile_impl);
+  cd ../..
+  if [[ "$bakepath" == "$(pwd)/impl/dir/bake" ]]; then
+    bake_echo_green "OK: found bake dir from $(pwd)"
+  else
+    bake_echo_red "ERROR: did not find bake dir from $(pwd)"
+    return 1
+  fi
+}
+
+bake_test 12_test_bakepath_file_impl
+function 12_test_bakepath_file_impl () {
+  bake_echo_green "This tests that setting an implicit Bakefile works appropriately"
+  cd impl/file
+  local bakepath
+  bakepath=$(bake_find_bakefile_impl);
+  cd ../..
+  if [[ "$bakepath" == "$(pwd)/impl/file/Bakefile" ]]; then
+    bake_echo_green "OK: found Bakefile from $(pwd)"
+  else
+    bake_echo_red "ERROR: did not find Bakefile from $(pwd)"
+    return 1
+  fi
 }
 
 bake_task all
