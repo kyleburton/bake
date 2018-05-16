@@ -96,9 +96,9 @@ Pushes a file system path onto the end of `BAKEPATH`.
 
 Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
 
-## What if I want multiple Bakefiles?
+## Look Ma, no `Bakefile` aka lets use a `./bake` directory
 
-Easy! Make a directory called `bake`. Bake treats everything in that directory as a Bakefile.
+`bake` can also be used without a `Bakefile`, if you make a directory called `bake` and place shell files within it, `bake` will treat everything in that directory as library and require it automatically.  See the section on libraries below.
 
 # Libraries!
 
