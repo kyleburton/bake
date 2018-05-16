@@ -1,4 +1,6 @@
-## bake - bash [mr]ake
+## bake - a pure bash project automation tool
+
+> `bake`: The best thing since sliced artisanal organic heirloom sourdough cultured ... no, no, lets calm down, its just an automation tool.
 
 Pure bash build framework.  No libraries, no dependencies (in this framework).  Designed in the spirit of rake and make.  I wished for a self-contained tool that did not require any more bootstrapping than running curl or a single scp, so I made this.
 
