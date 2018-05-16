@@ -331,14 +331,23 @@ function bake_cd () {
 function bake_find_bakefile_impl () {
   local project_root
   project_root="$(pwd)"
-
-  if [ -e "Bakefile" ]; then
+  if [ -f "Bakefile" ]; then
     echo "$project_root/Bakefile"
     return 0
   fi
 
-  if [ -e "bakefile" ]; then
+  if [ -f "bakefile" ]; then
     echo "$project_root/bakefile"
+    return 0
+  fi
+
+  if [ -d "bake" ]; then
+    echo "$project_root/bake"
+    return 0
+  fi
+
+  if [ -d "Bake" ]; then
+    echo "$project_root/Bake"
     return 0
   fi
 
@@ -499,6 +508,17 @@ END
   fi
 }
 
+function bake_source_bakefile() {
+  bakefile=$1
+  if [[ -d $bakefile ]]; then
+    for f in "$bakefile"/*; do
+      bake_source_bakefile "$f"
+    done
+  else
+    source "$bakefile"
+  fi
+}
+
 function bake_run () {
   local task="${1:-}"
   if [ -n "$task" ]; then
@@ -531,8 +551,7 @@ function bake_run () {
   fi
 
   export BAKEFILE="$bakefile"
-
-  source "$bakefile"
+  bake_source_bakefile "$bakefile"
 
   if [ -n "$task" ]; then
     if bake_is_registered_task "$task"; then

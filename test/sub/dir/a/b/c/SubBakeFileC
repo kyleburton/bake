@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -eu
+
+bake_task bar_task_c "The bar_task_c command just echos its arguments"
+function bar_task_c () {
+  echo "bar_task_c"
+}
