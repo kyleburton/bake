@@ -12,7 +12,7 @@ function build::update-version () {
 
   bake_echo_green "build::update-version: infname=$infname vstring=$vstring PWD=$PWD"
   #sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
-  sed -i '' -e "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+  sed -i -e "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
 }
 
 function build::curr-git-tag {
@@ -55,7 +55,6 @@ function make-release () {
 
   (
   cd ..
-  git tag "$next_tag"
   test -d ./release || mkdir ./release
   test -d "./release/$relname/bin" || mkdir -p "./release/$relname/bin"
 
@@ -65,6 +64,8 @@ function make-release () {
   build::update-version "./release/$relname/bin/bake" "$next_tag"
 
   tar -C ./release -czvf $bundle_name $relname
+
+  git tag "$next_tag"
   bake_echo_yellow "TODO: update Changes using the current date + git log using curr ($curr_tag) vs next ($next_tag) tags"
   bake_echo_yellow "TODO: automate the process of creating the release in GH: https://help.github.com/articles/creating-releases/"
   )
