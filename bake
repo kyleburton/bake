@@ -34,7 +34,7 @@ BAKE_LOG_LEVEL="${BAKE_LOG_LEVEL:-$BAKE_LOG_LEVEL_INFO}"
 #
 #  The list of directories that bake will search when resolving libraries (via require)
 #
-BAKEPATH=${BAKEPATH:+$BAKEPATH:}$PWD
+BAKEPATH="${BAKEPATH:-}"
 
 BAKE_PACKAGES_PATH="$HOME/.bake/packages"
 
@@ -95,28 +95,41 @@ function bake_looks_like_url () {
   return 1
 }
 
+function bake_source_from_fs () {
+  local file="$1"
+  local fname="$2"
+  # shellcheck disable=SC2034
+  BAKE_LIBS["$file"]="$fname"
+  # shellcheck disable=SC2064
+  trap "bake_echo_red 'Error[bake_require_from_fs] loading require: $fname'" EXIT
+  source "$fname"
+  trap EXIT # clear the trap
+  return 0
+}
+
 function bake_require_from_fs () {
   local file="$1"
+
+  if [[ -e "$file" ]]; then
+    bake_source_from_fs "$file" "$file"
+    return 0
+  fi
+
+  if [[ -e "$(bake_bakefile_dir)/$file" ]]; then
+    bake_source_from_fs "$file" "$(bake_bakefile_dir)/$file"
+    return 0
+  fi
+
   for path in $(echo "$BAKEPATH" | tr : ' '); do
     local fname="$path/$file"
     if [ -e "$fname" ]; then
-      # shellcheck disable=SC2034
-      BAKE_LIBS["$file"]="$fname"
-      # shellcheck disable=SC2064
-      trap "bake_echo_red 'Error[bake_require_from_fs] loading require: $fname'" EXIT
-      source "$fname"
-      trap EXIT # clear the trap
+      bake_source_from_fs "$file" "$fname"
       return 0
     fi
 
     fname="$path/$file.sh"
     if [ -e "$fname" ]; then
-      # shellcheck disable=SC2034
-      BAKE_LIBS["$file"]="$fname"
-      # shellcheck disable=SC2064
-      trap "bake_echo_red 'Error[bake_require_from_fs] loading require: $fname'" EXIT
-      source "$fname"
-      trap EXIT # clear the trap
+      bake_source_from_fs "$file" "$fname"
       return 0
     fi
   done

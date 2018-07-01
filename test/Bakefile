@@ -182,6 +182,16 @@ function 12_test_bakepath_file_impl () {
   fi
 }
 
+bake_test 13_local_require_support
+function 13_local_require_support () {
+  # NB: the other tests already test local requires
+  # here we only need to test realtive and absolute path'd requires
+  # fully pathed
+  bake_require "$(bake_bakefile_dir)/lib/mylib.sh"
+  # relatively pathed
+  bake_require "../test/lib/mylib.sh"
+}
+
 bake_task all
 function all () {
   bake_log_level fatal
