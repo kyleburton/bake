@@ -165,7 +165,7 @@ function fetch-s3-package () {
 
 ## Configuration at the top
 
-Extract configuration and parameters into environment variables, place these at the top of your script.  This will help anyone looking at your `Bakefile` or libraries understand what configuration options you're using and how to set or override them.  
+Extract configuration and parameters into environment variables, place these at the top of your script.  This will help anyone looking at your `Bakefile` or libraries understand what configuration options you're using and how to set or override them.
 
 ```sh
 # config/development.env
@@ -183,7 +183,7 @@ CONFIG="${CONFIG:-config/development.env}"
 
 function init () {
   if [ ! -e "$CONFIG" ]; then
-    bake_echo_red "Error: please copy $CONFIG.template to $CONFIG and 
+    bake_echo_red "Error: please copy $CONFIG.template to $CONFIG and
     bake_echo_red "fill in the required paramters."
     return 1
   fi
@@ -280,7 +280,7 @@ function alembic () {
 
 ## Namespaces
 
-`bash` technically doesn't have namespaces for functions, yet it allows for periods `.` and colons `:` in the names of shell functions.  Using these allows us to get many of the benefits of namespaces.  
+`bash` technically doesn't have namespaces for functions, yet it allows for periods `.` and colons `:` in the names of shell functions.  Using these allows us to get many of the benefits of namespaces.
 
 Here's an example of using colons `:` for namespacing
 
@@ -333,6 +333,7 @@ bake make-release
 # Contributors
 
 * Kyle Burton &lt;kyle.burton@gmail.com&gt;
+* Isaac Schaaf &lt;zeekus99@gmail.com&gt;
 
 # License
 
