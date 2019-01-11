@@ -1,7 +1,9 @@
+2019-01-11T22:02:30Z - releasing 1.0.13
+  bash command line completion now only completes the first word, see: https://github.com/kyleburton/bake/pull/29
 2017-07-23T19:58:49Z - releasing 1.0.6
   Linted with shellcheck : https://github.com/koalaman/shellcheck
 2014-11-03T16:26:34Z
-  When an unknown task is provided on the command line, bake now prints out only 
+  When an unknown task is provided on the command line, bake now prints out only
   matching (via substring) registered tasks.
 2014-11-03T16:26:05Z
   Task Descriptions are optional, they default to the task name.
