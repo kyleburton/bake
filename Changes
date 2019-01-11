@@ -1,4 +1,4 @@
-2019-01-11T22:02:30Z - releasing 1.0.13
+2019-01-11T22:02:30Z - releasing 1.0.14
   bash command line completion now only completes the first word, see: https://github.com/kyleburton/bake/pull/29
 2017-07-23T19:58:49Z - releasing 1.0.6
   Linted with shellcheck : https://github.com/koalaman/shellcheck
