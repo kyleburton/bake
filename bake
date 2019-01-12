@@ -264,7 +264,21 @@ function bake_task () {
     echo "Error[bake_task]: you must supply a task name!"
     return 1
   fi
-  BAKE_TASKS[$name]="ok"
+  BAKE_TASKS[$name]="$name"
+  BAKE_TASK_DESCRIPTIONS[$name]="$short_desc"
+}
+
+# bake_task_alias taskname function ["description"]
+function bake_task_alias () {
+  local name fn_name short_desc
+  name="${1:-}"
+  fn_name="${2:-}"
+  local short_desc="${3:-No Description for task: $name}"
+  if [ -z "$name" ] || [ -z "$fn_name" ]; then
+    echo "Error[bake_task_alias]: you must supply a task name and function name!"
+    return 1
+  fi
+  BAKE_TASKS[$name]="$fn_name"
   BAKE_TASK_DESCRIPTIONS[$name]="$short_desc"
 }
 
@@ -284,9 +298,9 @@ function bake_subtask () {
   fi
 
   local tname="$supertask_name$BAKE_TASK_SEP$subtask_name"
-  BAKE_TASKS[$tname]="ok"
-  BAKE_SUPERTASKS[$supertask_name]="ok"
-  BAKE_SUBTASKS[$tname]="ok"
+  BAKE_TASKS[$tname]="$tname"
+  BAKE_SUPERTASKS[$supertask_name]="$supertask_name"
+  BAKE_SUBTASKS[$tname]="$tname"
   BAKE_TASK_DESCRIPTIONS[$tname]="$short_desc"
 }
 
@@ -299,7 +313,7 @@ function bake_supertask () {
     return 1
   fi
 
-  BAKE_SUPERTASKS[$supertask_name]="ok"
+  BAKE_SUPERTASKS[$supertask_name]="$supertask_name"
   BAKE_SUPERTASK_DESCRIPTIONS[$supertask_name]="$short_desc"
 }
 
@@ -314,22 +328,34 @@ function bake_task_short_desc () {
   fi
 }
 
-function bake_is_registered_task () {
+function bake_task_function () {
   local name="$1"
   local value="${BAKE_TASKS[$name]:-}"
-  test "$value" = "ok"
+  echo "$value"
+}
+
+function bake_subtask_function () {
+  local name="$1"
+  local value="${BAKE_SUBTASKS[$name]:-}"
+  echo "$value"
+}
+
+function bake_supertask_function () {
+  local name="$1"
+  local value="${BAKE_SUPERTASKS[$name]:-}"
+  echo "$value"
+}
+
+function bake_is_registered_task () {
+  test -n "$(bake_task_function "$1")"
 }
 
 function bake_is_registered_subtask () {
-  local name="$1"
-  local value="${BAKE_SUBTASKS[$name]:-}"
-  test "$value" = "ok"
+  test -n "$(bake_subtask_function "$1")"
 }
 
 function bake_is_registered_supertask () {
-  local name="$1"
-  local value="${BAKE_SUPERTASKS[$name]:-}"
-  test "$value" = "ok"
+  test -n "$(bake_supertask_function "$1")"
 }
 
 function bake_cd () {
@@ -568,7 +594,7 @@ function bake_run () {
 
   if [ -n "$task" ]; then
     if bake_is_registered_task "$task"; then
-      $task "$@"
+      $(bake_task_function "$task") "$@"
       exit $?
     fi
     # TODO: if it's a supertask and no subtask exists, show help for the supertask
@@ -577,7 +603,7 @@ function bake_run () {
         local tname="$task-$1"
         shift
         if bake_is_registered_task "$tname"; then
-          $tname "$@"
+          $(bake_task_function "$tname") "$@"
           exit $?
         fi
       fi
@@ -585,11 +611,11 @@ function bake_run () {
   fi
 
   if [ -n "$BAKE_DEFAULT_TASK" ]; then
-    "$BAKE_DEFAULT_TASK"
+    $(bake_task_function "$BAKE_DEFAULT_TASK") "$@"
     exit $?
   fi
 
-  if [ "$task" == upgrade ]; then
+  if [ "$task" == "upgrade" ]; then
     bake_upgrade
     return 0
   fi
