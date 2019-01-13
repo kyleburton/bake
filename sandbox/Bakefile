@@ -14,5 +14,14 @@ function run.my.program () {
   echo "lets run the program! $*"
 }
 
+
+function run.tests () {
+  echo "Running tests!"
+}
+
 # Alias the "run.my.program" function to "run"
 bake_task_alias run run.my.program "Run the program [alias]"
+
+# Aliases also allows us to create bake tasks with the same name
+# as built in functions without overriding them
+bake_task_alias test run.tests "Run the tests"
