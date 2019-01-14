@@ -1,36 +1,6 @@
 #!/usr/bin/env bash
 
-bake_supertask build "Various tasks for building the project"
-
-bake_subtask build frontend "build the frontend"
-function build-frontend () {
-  echo "Building the frontend"
-}
-
-# Kinda redundent to include a bake_task declaration
-# but this is to show that it does not interfere with aliases
-function run.my.program () {
-  echo "lets run the program! $*"
-}
-
-function run.completer () {
-  echo "hello world"
-}
-
-
-function run.tests () {
-  echo "Running tests!"
-}
-
-function run.docker () {
+bake_task docker
+function docker () {
   command docker "$@"
 }
-
-
-# Alias the "run.my.program" function to "run"
-bake_task_alias run run.my.program "Run the program [alias]"
-bake_task_alias docker run.docker "call docker cli"
-
-# Aliases also allows us to create bake tasks with the same name
-# as built in functions without overriding them
-bake_task_alias test run.tests "Run the tests"
