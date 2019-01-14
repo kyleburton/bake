@@ -9,7 +9,6 @@ function build-frontend () {
 
 # Kinda redundent to include a bake_task declaration
 # but this is to show that it does not interfere with aliases
-bake_task
 function run.my.program () {
   echo "lets run the program! $*"
 }
