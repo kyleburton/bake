@@ -274,7 +274,7 @@ function bake_task_alias () {
   name="${1:-}"
   fn_name="${2:-}"
   local short_desc="${3:-No Description for task: $name}"
-  if [ -z "$name" ] || [ -z "$fn_name" ]; then
+  if [[ -z "$name" || -z "$fn_name" ]]; then
     bake_log_fatal "you must supply a task name and function name!"
     return 1
   fi
