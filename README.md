@@ -334,6 +334,7 @@ bake make-release
 
 * Kyle Burton &lt;kyle.burton@gmail.com&gt;
 * Isaac Schaaf &lt;zeekus99@gmail.com&gt;
+* Steve Hajducko &lt;hajducko@gmail.com&gt;
 
 # License
 
