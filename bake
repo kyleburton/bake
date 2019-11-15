@@ -158,7 +158,10 @@ function bake_url_to_package_path () {
   local fpath
   fpath=${url##*://}
   fpath=${fpath##git@}
-  fpath=${fpath%%.git}
+
+  # Nuke the .git/ if left in path
+  fpath=${fpath/.git\///}
+
   echo "$BAKE_PACKAGES_PATH/$fpath"
 }
 
@@ -168,9 +171,21 @@ function bake_git_to_url () {
   local path
 
   [[ $url =~ git@(.*):(.*) ]] && host=${BASH_REMATCH[1]} && path=${BASH_REMATCH[2]}
-  echo ssh://git@${host}/${path}
+  echo ssh://git@"${host}"/"${path}"
 }
 
+function bake_sanitize_url () {
+  local url="$1"
+
+  # If no schema, assume it's https
+  if [[ $url != *://* ]]; then
+    url=https://${url}
+  fi
+
+  # Remove any .git in the url
+  url=${url/.git\///}
+  echo "$url"
+}
 
 function bake_ensure_bake_packages_path () {
   test -d "$BAKE_PACKAGES_PATH" || mkdir -p "$BAKE_PACKAGES_PATH"
@@ -179,41 +194,42 @@ function bake_ensure_bake_packages_path () {
 function bake_package_install () {
   local url="$1"
   local tag="${2:-master}"
-  local schema=
+  local schema=${url%%://*}
 
-  trap "bake_echo_red 'Error[bake_package_install] git command not found in PATH'" EXIT
-    which git > /dev/null
-  trap EXIT # clear the trap
-
-  # If no schema, assume it's https
-  if [[ $url != *://* ]]; then
-    url=https://${url}
+  if ! command -v git > /dev/null; then
+   bake_echo_red "Error[bake_package_install] git command not found in PATH" EXIT
+   exit 1
   fi
-  schema=${url%%://*}
 
   bake_ensure_bake_packages_path
   pushd "$BAKE_PACKAGES_PATH" > /dev/null
 
   local git_project_name=
   local git_host_and_user=
-  echo URL is $url
+  local bake_library_file=
+
   [[ $url =~ [a-zA-Z]+://([a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]] && \
     git_host_and_user=${BASH_REMATCH[1]} && \
-    git_project_name=${BASH_REMATCH[2]}
+    git_project_name=${BASH_REMATCH[2]} && \
+    bake_library_file=${BASH_REMATCH[3]}
 
-  trap "bake_echo_red 'Error[bake_package_install] could not parse url $url'" EXIT
-    test -n "$git_host_and_user"
-    test -n "$git_project_name"
-  trap EXIT
+  if [[ -z "$git_host_and_user" ]] || [[ -z "$git_project_name" ]]; then
+    bake_echo_red "Error[bake_package_install] Could not parse url '$url'"
+    exit 1
+  fi
+
+  if [[ -z "$bake_library_file" ]]; then
+    bake_echo_red "Error[bake_package_install] No library file specified"
+    exit 1
+  fi
 
   local git_url
   git_url=${git_host_and_user}/${git_project_name}
   git_host_and_user=${git_host_and_user##git@}
-  git_project_name=${git_project_name%%.git}
   test -d "$git_host_and_user" || mkdir -p "$git_host_and_user"
   cd "$git_host_and_user"
 
-  if [ ! -e "$git_project_name" ]; then
+  if [[ ! -e "$git_project_name" ]]; then
     git clone "$schema://$git_url"
   fi
 
@@ -232,7 +248,6 @@ function bake_require_from_url () {
 
   if [ -e "$fspath" ]; then
     # shellcheck disable=SC2064
-    echo $fspath exists
     trap "bake_echo_red 'Error[bake_require_from_url] loading require: $fspath'" EXIT
     source "$fspath"
     trap EXIT # clear the trap
@@ -257,9 +272,11 @@ function bake_require_from_url () {
 function bake_require () {
   local module="$1"
   if bake_looks_like_url "$module"; then
+    module="$(bake_sanitize_url "$module")"
     bake_require_from_url "$module"
   elif bake_looks_like_git "$module"; then
     module="$(bake_git_to_url "$module")"
+    module="$(bake_sanitize_url "$module")"
     bake_require_from_url "$module"
   else
     bake_require_from_fs "$module"
