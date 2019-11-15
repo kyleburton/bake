@@ -96,15 +96,40 @@ Pushes a file system path onto the end of `BAKEPATH`.
 
 ### `bake_require libname`
 
-Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
+Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries. 
+
+You can also load libraries from Github or Enterprise Github instances.  See the [Remote Libraries](#remote_libraries) section for more details.
 
 ## Look Ma, no `Bakefile` aka lets use a `./bake` directory
 
 `bake` can also be used without a `Bakefile`, if you make a directory called `bake` and place shell files within it, `bake` will treat everything in that directory as library and require it automatically.  See the section on libraries below.
 
-# Libraries!
+
+# Libraries
 
 Some of the goals I had for for `bake` are for it to encourage best practices for shell scripting and to encourage re-use by encouraging the creation of small re-useable parts including libraries.  Bake encourages small re-useable functions essentially by requiring the use of shell functions.  It's up to you to break your functions into libraries that can be shared across your projects.  Have a look at the [Best Practices](#best-practices) section below.
+
+## Remote Libraries
+
+Loading via Github via http/https
+```
+bake_require github.com/john/bakelib/my_bake_funcs
+bake_require https://github.com/john/bakelib/my_bake_funcs
+```
+
+Or via ssh
+```
+bake_require ssh://github.acme.com/john/bakelib/my_bake_funcs
+bake_require git@github.acme.com:john/bakelib.git/my_bake_funcs
+```
+
+You can also load from branches or tags
+```
+bake_require ssh://github.acme.com/john/bakelibs/my_bake_funcs develop
+bake_require github.com/steve/examples/lib1 1.0.2
+```
+
+If you want to update your locally installed version of the libraries, you can run `bake update`
 
 ### `BAKEPATH`
 
@@ -334,6 +359,7 @@ bake make-release
 
 * Kyle Burton &lt;kyle.burton@gmail.com&gt;
 * Isaac Schaaf &lt;zeekus99@gmail.com&gt;
+* Steve Hajducko &lt;hajducko@gmail.com&gt;
 
 # License
 

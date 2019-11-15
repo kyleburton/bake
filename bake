@@ -4,7 +4,7 @@ set -Eeu -o pipefail
 
 
 # TODO: detect if we're being sourced or if we're being executed
-BAKE_VERSION="2014-11-05"
+BAKE_VERSION="1.0.15"
 BAKE_STDOUT_IS_TERMINAL=""
 BAKE_COLOR_NORMAL=""
 BAKE_COLOR_RED=""
@@ -77,6 +77,15 @@ function bake_bakefile_dir () {
 
 BAKE_ROOT_DIR="$(bake_root_dir)"
 
+function bake_looks_like_git () {
+  local thing="$1"
+
+  if [[ $thing == git@* ]]; then
+    return 0
+  fi
+  return 1
+}
+
 function bake_looks_like_url () {
   local thing="$1"
 
@@ -89,6 +98,10 @@ function bake_looks_like_url () {
   fi
 
   if [[ $thing == github.com/* ]]; then
+    return 0
+  fi
+
+  if [[ $thing == ssh://* ]]; then
     return 0
   fi
 
@@ -140,46 +153,38 @@ function bake_require_from_fs () {
 
 function bake_url_to_package_path () {
   local url="$1"
-  # strip the http:// or https:// if present
+  # strip the *:// if present
   # then see if it exists as $BAKE_PACKAGES_PATH/$url
   local fpath
-  fpath="$(echo "$url" | sed 's/^https\?:\/\///')"
+  fpath=${url##*://}
+  fpath=${fpath##git@}
+
+  # Nuke the .git/ if left in path
+  fpath=${fpath/.git\///}
+
   echo "$BAKE_PACKAGES_PATH/$fpath"
 }
 
-function bake_require_git () {
+function bake_git_to_url () {
   local url="$1"
-  local libpath="$2"
-  local tag="${3:-master}"
+  local host
+  local path
 
-  bake_ensure_bake_packages_path
+  [[ $url =~ git@(.*):(.*) ]] && host=${BASH_REMATCH[1]} && path=${BASH_REMATCH[2]}
+  echo ssh://git@"${host}"/"${path}"
+}
 
-  pushd "$BAKE_PACKAGES_PATH" >/dev/null
+function bake_sanitize_url () {
+  local url="$1"
 
-  # git@github.com:kyleburton/bake-recipes.git
-  # https://github.com/kyleburton/bake-recipes.git
-  # strip the leading git@, http:// or https://
-  local full_package_path
-  full_package_path="$(echo "$url" | sed 's/^git@//' | sed 's/https:\/\///' | sed 's/http:\/\///' | sed 's/.git$//' | sed 's/:/\//')"
-  local package_path
-  package_path="$(dirname "$full_package_path")"
-
-  test -d "$package_path" || mkdir -p "$package_path"
-  cd "$package_path"
-  local dname
-  dname="$(basename "$full_package_path")"
-  if [ ! -d "$dname" ]; then
-    git clone "$url"
-    cd "$dname"
-    git fetch
-    git co "$tag"
+  # If no schema, assume it's https
+  if [[ $url != *://* ]]; then
+    url=https://${url}
   fi
 
-  popd > /dev/null
-
-  # translate the require path to local fs path
-  # source it!
-  source "$BAKE_PACKAGES_PATH/$full_package_path/$libpath"
+  # Remove any .git in the url
+  url=${url/.git\///}
+  echo "$url"
 }
 
 function bake_ensure_bake_packages_path () {
@@ -189,20 +194,46 @@ function bake_ensure_bake_packages_path () {
 function bake_package_install () {
   local url="$1"
   local tag="${2:-master}"
+  local schema=${url%%://*}
+
+  if ! command -v git > /dev/null; then
+   bake_echo_red "Error[bake_package_install] git command not found in PATH" EXIT
+   exit 1
+  fi
 
   bake_ensure_bake_packages_path
-  pushd "$BAKE_PACKAGES_PATH"
-  local git_project_name
-  git_project_name="$(echo "$url" | awk -F/ '{print $3 }')"
-  local git_host_and_user
-  git_host_and_user="$(echo "$url" | awk -F/ '{print $1 "/" $2 }')"
+  pushd "$BAKE_PACKAGES_PATH" > /dev/null
+
+  local git_project_name=
+  local git_host_and_user=
+  local bake_library_file=
+
+  [[ $url =~ [a-zA-Z]+://([a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]] && \
+    git_host_and_user=${BASH_REMATCH[1]} && \
+    git_project_name=${BASH_REMATCH[2]} && \
+    bake_library_file=${BASH_REMATCH[3]}
+
+  if [[ -z "$git_host_and_user" ]] || [[ -z "$git_project_name" ]]; then
+    bake_echo_red "Error[bake_package_install] Could not parse url '$url'"
+    exit 1
+  fi
+
+  if [[ -z "$bake_library_file" ]]; then
+    bake_echo_red "Error[bake_package_install] No library file specified"
+    exit 1
+  fi
+
   local git_url
-  git_url="$(echo "$url" | awk -F/ '{print $1 "/" $2 "/" $3}')"
+  git_url=${git_host_and_user}/${git_project_name}
+  git_host_and_user=${git_host_and_user##git@}
   test -d "$git_host_and_user" || mkdir -p "$git_host_and_user"
   cd "$git_host_and_user"
-  if [ ! -e "$git_project_name" ]; then
-    git clone "https://$git_url"
+
+  if [[ ! -e "$git_project_name" ]]; then
+    git clone "$schema://$git_url"
   fi
+
+  # Checkout the project and branch/tag
   cd "$git_project_name"
   git checkout .
   git pull
@@ -241,6 +272,11 @@ function bake_require_from_url () {
 function bake_require () {
   local module="$1"
   if bake_looks_like_url "$module"; then
+    module="$(bake_sanitize_url "$module")"
+    bake_require_from_url "$module"
+  elif bake_looks_like_git "$module"; then
+    module="$(bake_git_to_url "$module")"
+    module="$(bake_sanitize_url "$module")"
     bake_require_from_url "$module"
   else
     bake_require_from_fs "$module"
