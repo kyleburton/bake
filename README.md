@@ -2,7 +2,7 @@
 
 > `bake`: The best thing since sliced artisanal organic heirloom sourdough cultured ... no, no, lets calm down, its just an automation tool.
 
-Pure bash build framework.  No libraries, no dependencies (in this framework).  Designed in the spirit of rake and make.  I wished for a self-contained tool that did not require any more bootstrapping than running curl or a single scp, so I made this.
+Pure bash build framework.  No libraries, no dependencies (in this framework).  Designed in the spirit of rake and make.  I wished for a self-contained tool that did not require any more bootstrapping than running curl or a single `scp`, so I made this.
 
 The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 
@@ -96,7 +96,7 @@ Pushes a file system path onto the end of `BAKEPATH`.
 
 ### `bake_require libname`
 
-Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries. 
+Searches `BAKEPATH` for the library and sources it, loading the file (executing its contents).  Libraries should (generally) only contain declarations, as any imperative code will be executed when the library is loaded.  Libraries may load other libraries.
 
 You can also load libraries from Github or Enterprise Github instances.  See the [Remote Libraries](#remote_libraries) section for more details.
 
@@ -150,6 +150,7 @@ This section is chock full of tips for how to get the most out of your `bake` ex
 * Return instead of exit, but use return values please!
 * Don't put naked shell code in your `Bakefile` or libraries if you can help it!
 * Idempotency is your friend, take the time to make your functions idempotent
+* When Enough is Enough, Graduate to a More Powerful Tool
 
 #### Be Helpful
 
@@ -209,7 +210,7 @@ CONFIG="${CONFIG:-config/development.env}"
 function init () {
   if [ ! -e "$CONFIG" ]; then
     bake_echo_red "Error: please copy $CONFIG.template to $CONFIG and
-    bake_echo_red "fill in the required paramters."
+    bake_echo_red "fill in the required parameters."
     return 1
   fi
   source "$CONFIG"
@@ -255,17 +256,17 @@ function init () {
   # check configuration
   if [ ! -e "$CONFIG" ]; then
     bake_echo_red "Please copy config/config-template.json to $CONFIG"
-    bake_echo_red "and fill in the required values (such as the databse connection parameters)"
+    bake_echo_red "and fill in the required values (such as the database connection parameters)"
     return 1
   fi
 
   if [ ! -e "$ALEMBIC_CONFIG" ]; then
     bake_echo_red "Please copy config/alembic-config-template.ini to $ALEMBIC_CONFIG"
-    bake_echo_red "and fill in the required values (such as the databse connection parameters)"
+    bake_echo_red "and fill in the required values (such as the database connection parameters)"
     return 1
   fi
 
-  # make sure our pre-requisits are installed
+  # make sure our prerequisites are installed
   pip install -r requirements.txt
 
   INIT_CALLED="true"
@@ -340,6 +341,16 @@ function download-package () {
 }
 ```
 
+## When Enough is Enough, Graduate to a More Powerful Tool
+
+Although `bake` ultimately has all the same features and expressiveness as shell scripting in `bash`, and is quite capable, it's intended to be for lightweight project automation.  If you find yourself needing a lot of additional utilities to be installed to run your `Bakefile`s or have significant and complex logic, and ultimately need a more fully featured build tool or programming language you should graduate to one.  `bake` may still be there for you as what it was intended for - a helpful task runner for your more complex steps.
+
+# My Thoughts on `bake` vs Other Build and Project Automation Tools
+
+`make` is definitely more standard, has built in facilities for performing dependency analysis and is a much better suited tool for the parts of your project that are working with C and C++ source code.  Though `make` introduces additional complexity if you need to implement additional logic, you're free to embed shell commands, though the rules for escaping special characters between `make` and `bash` tends to get complex quickly.  Re-use in `make` can be trickier than in shell scripts.  `make` isn't a task runner, though you can use `.PHONY` targets to simulate this, it doesn't have a facility for offering a catalog of available tasks along with descriptions.
+
+`rake` is a wonderful tool, providing a succinct, internal, DSL for defining tasks and scaling up to the full `ruby` programming language.  For my use-cases it brought with it the complexity of managing the installation and run-time of both ruby and various libraries.
+
 # Further Reading
 
 `bake` is at its core a collection of shell function and strongly followed conventions.  Learning `bash` is therefor a great idea for getting the most out of `bake`.  This has the added benefit of becoming great at that venerable, widely applicable skill: shell scripting.
@@ -355,6 +366,8 @@ cd build
 bake make-release
 ```
 
+Gzip the `./release/bake-$VERSION` directory and add it to the github release.  Update the homebrew tap with the new download link for the `tgz` file and it's sha256 sum.
+
 # Contributors
 
 * Kyle Burton &lt;kyle.burton@gmail.com&gt;
@@ -366,5 +379,3 @@ bake make-release
 Copyright (C) 2014-2016 Kyle Burton &lt;kyle.burton@gmail.com&gt;
 
 Distributed under the Eclipse Public License, the same as Clojure.
-
-
