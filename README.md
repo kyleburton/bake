@@ -44,20 +44,24 @@ Organizing code into libraries is recommended, so we're going to start off with 
 
 
 ```sh
-$ test -d test/lib || mkdir test/lib
-$ cat > test/lib/mylib.sh
+# Create a test folder to hold the bake libraries
+test -d test/lib || mkdir -p test/lib
+
+# Create library with a bake task
+cat > 'test/lib/mylib.sh' <<'EOF'
 #!/usr/bin/env bash
 bake_task mylib:foo "The foo command just echo's its arguments"
 function mylib:foo () {
   echo "foo: args='$@'"
 }
-^D
+EOF
 
-$ cat > Bakefile
+# Create Bakefile to include libraries
+cat > 'Bakefile' <<'EOF'
 #!/usr/bin/env bash
 bake_push_libdir $(bake_bakefile_dir)/test/lib
 bake_require mylib
-^D
+EOF
 ```
 
 Then run bake:
@@ -70,7 +74,7 @@ bake task [arg ...]
   mylib:foo                      The foo command just echo's its arguments
 
 
-$ bake foo this that
+$ bake mylib:foo this that
 foo: args='this that'
 ```
 

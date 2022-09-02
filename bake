@@ -540,18 +540,17 @@ function bake_update () {
 
 function bake_create_bakefile () {
   if [ ! -e "Bakefile" ]; then
-    cat > "Bakefile" <<END
+    cat > "Bakefile" <<'END'
 #!/usr/bin/env bash
 
 # bake_require github.com/kyleburton/bake-recipes/docker/docker.sh
 
+# Set default editor if not defined
+export EDITOR="${EDITOR:-vi}"
+
 bake_task get-started "Get started by editing this Bakefile"
 function get-started () {
-  if [ -n "$EDITOR" ]; then
     "$EDITOR" Bakefile
-  else
-    vim Bakefile
-  fi
 }
 END
   fi
