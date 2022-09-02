@@ -440,19 +440,19 @@ function bake_inernal_help () {
 function bake_sorted_task_list () {
   (
    for task in "${!BAKE_TASKS[@]}"; do
-     if ! bake_is_registered_subtask $task; then
-       echo $task
+     if ! bake_is_registered_subtask "$task"; then
+       echo "$task"
      fi
    done;
    for task in "${!BAKE_SUPERTASKS[@]}"; do
-     echo $task
+     echo "$task"
    done
   ) | sort -u
 }
 
 function bake_sorted_subtask_list () {
   for task in "${!BAKE_SUBTASKS[@]}"; do
-    echo $task
+    echo "$task"
   done | sort -u
 }
 
