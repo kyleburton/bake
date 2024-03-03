@@ -13,10 +13,10 @@ The API follows in the spirit of Ruby's amazing and wonderful Rake utility.
 I (Kyle Burton) have a custom [brew tap](https://github.com/kyleburton/homebrew-kyleburton), to use it to install `bake` do the following on a system where you already have `brew` installed:
 
 ```sh
-brew tap --full github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
+brew tap github/kyleburton https://github.com/kyleburton/homebrew-kyleburton.git
 
 # recommended on OS X (bake depends on versions of bash that support arrays)
-brew install kyleburton/kyleburton/bake
+brew install github/kyleburton/bake
 
 # recommended on Linux (Linux already has a good bash)
 brew install github/kyleburton/bake --without-bash
