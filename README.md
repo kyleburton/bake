@@ -84,7 +84,7 @@ foo: args='this that'
 
 ### `bake_task task-name "task-description"`
 
-This registers a task and its description so it can be executed and help can be displayed.
+This registers a task and its description so it can be executed and a short help string.
 
 ### `bake_default_task task-name`
 
@@ -144,6 +144,7 @@ This is a colon separated list of paths that `bake_require` uses to locate libra
 
 This section is chock full of tips for how to get the most out of your `bake` experience!
 
+* Be Robust
 * Be Helpful
 * Extract configuration and parameters into environment variables, place these at the top of your script.
 * Use defaults `${MYTHING_VERSION:-1.0.7}`
@@ -160,6 +161,8 @@ This section is chock full of tips for how to get the most out of your `bake` ex
 
 Use exit codes to indicate success or failure.  If you write a function that detects an error and exits, use 'return 1' so the calling shell knows that your task did not succeed.  This is important for your CI server and any other automation around your `Bakefile`.
 
+#### Be Helpful
+
 Be kind to yourself and others, write brief but descriptive task descriptions.  Use your configuration variables in your task descriptions so users know what settings are.
 
 ```sh
@@ -167,6 +170,19 @@ Be kind to yourself and others, write brief but descriptive task descriptions.  
 
 CONFIG="${CONFIG:-config/development.env}"
 
+bake_task init "Initialize the environment from CONFIG=$CONFIG"
+function init () {
+  bake_echo_red "Implement me, I'm just an example"
+  return 1
+}
+```
+
+Write descriptive help using Bake's comment based help annotations:
+
+```
+# @help.init|init sets up your local environment, pulling defaults from $CONFIG
+# @help.init|required development tooling will automatically be installed.
+# @help.init|please ensure you have the required disk space and authorizations.
 bake_task init "Initialize the environment from CONFIG=$CONFIG"
 function init () {
   bake_echo_red "Implement me, I'm just an example"

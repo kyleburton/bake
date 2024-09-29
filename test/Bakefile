@@ -5,8 +5,11 @@ TEST_NAME=".none."
 TESTS=""
 
 function bake_test () {
-  local tname="$1"
-  bake_task "$tname"
+  local tname desc
+  tname="$1"
+  desc="${2:-}"
+
+  bake_task "$tname" "$desc"
   TESTS="$TESTS $tname"
 }
 
@@ -14,16 +17,20 @@ function in_test () {
   TEST_NAME="$1"
 }
 
-bake_test 01_find_bakefile_sets_absolute_path
+# @help.01_find_bakefile_sets_absolute_path|Unit test.
+# @help.01_find_bakefile_sets_absolute_path|Tests that BAKEFILE is a file.
+# @help.01_find_bakefile_sets_absolute_path|Tests that $(bake_bakefile_dir)/BAKEFILE is a file.
+bake_test 01_find_bakefile_sets_absolute_path "assert bake_bakefile_dir is the absolute path to BAKEFILE"
 function 01_find_bakefile_sets_absolute_path () {
-  in_test $FUNCNAME
+  in_test "$FUNCNAME"
   cd lib
   test -f "$BAKEFILE"
   test -f "$(bake_bakefile_dir)/Bakefile"
   cd ..
 }
 
-bake_test 02_bake_cd
+# @help.02_bake_cd|Tests that bake_cd changes the PWD to the directory where the Bakefile is.
+bake_test 02_bake_cd "directory helper to set PWD to the location of the Bakefile"
 function 02_bake_cd () {
   cd lib
   bake_cd
@@ -32,10 +39,11 @@ function 02_bake_cd () {
   test -f ../Bakefile || exit 1
 }
 
-bake_test 03_bake_looks_up_directory_tree
+# @help.03_bake_looks_up_directory_tree|Assert that `bake` will traverse up the directory tree in order
+# @help.03_bake_looks_up_directory_tree|to find the Bakefile.
+bake_test 03_bake_looks_up_directory_tree "find the Bakefile in a parent directory."
 function 03_bake_looks_up_directory_tree () {
   bake_cd
-  bake_cmd="$(pwd)/../bake"
   pwd
   cd sub/dir/a/b/c/
   if bake_find_bakefile_impl; then
@@ -54,7 +62,8 @@ function 03_bake_looks_up_directory_tree () {
   bake_cd
 }
 
-bake_test 04_require_all
+# @help.04_require_all|test that bake_require_all loads all of the files in a directory.
+bake_test 04_require_all "require all the files in a directory."
 function 04_require_all () {
   bake_require_all lib/
   bar_task
@@ -128,6 +137,7 @@ function 09_test_bakepath () {
   bake_echo_green "This is after the require, if you see this then the test succeeded."
 }
 
+# @help.09_test_bakepath|Test that we can load libraries from the BAKEPATH
 bake_task 09_test_bakepath_helper "Called by the associated test"
 function 09_test_bakepath_helper () {
   bake_echo_green "This should be called with the BAKEPATH=\"$PWD\"/lib by the associated test"
@@ -215,4 +225,3 @@ function all () {
     bake_echo_green "All tests passed"
   fi
 }
-
