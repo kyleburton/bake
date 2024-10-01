@@ -1,0 +1,30 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+bake_task run-tests "Run tests"
+run-tests () {
+    (
+        cd test
+        bake all
+    )
+}
+
+bake_task lint "Lint the bake source files"
+lint () {
+    shellcheck \
+        bake \
+        Bakefile \
+        ./test/Bakefile \
+        ./test/lib/mylib.sh \
+        ./test/impl/dir/bake/SubBakeFile \
+        ./test/impl/file/Bakefile \
+        ./test/lib/mylib.sh \
+        ./test/sub/dir/a/SubBakeFileA \
+        ./test/sub/dir/a/b/SubBakeFileB \
+        ./test/sub/dir/a/b/c/SubBakeFileC \
+        ./packages/vim/vim-go.sh \
+        ./packages/vim/pathogen.sh \
+        ./packages/bake/internal/test.sh \
+        ./build/Bakefile \
+        ./bake-completion.sh
+}

@@ -22,12 +22,13 @@ BAKE_COLOR_LGRAY=""
 BAKE_COLOR_DGRAY=""
 BAKE_URL="https://raw.githubusercontent.com/kyleburton/bake/master/bake"
 
-BAKE_LOG_LEVEL_NONE=0  # none
-BAKE_LOG_LEVEL_FATAL=1 # fatal
-BAKE_LOG_LEVEL_ERROR=2 # error
-BAKE_LOG_LEVEL_WARN=3  # warn
-BAKE_LOG_LEVEL_INFO=4  # info
-BAKE_LOG_LEVEL_DEBUG=5 # debug
+BAKE_LOG_LEVEL_NONE=0     # none
+BAKE_LOG_LEVEL_FATAL=1    # fatal
+BAKE_LOG_LEVEL_ERROR=2    # error
+BAKE_LOG_LEVEL_WARN=3     # warn
+BAKE_LOG_LEVEL_INFO=4     # info
+BAKE_LOG_LEVEL_DEBUG=5    # debug
+BAKE_LOG_LEVEL_INTERNAL=6 # internal
 BAKE_LOG_LEVEL="${BAKE_LOG_LEVEL:-$BAKE_LOG_LEVEL_INFO}"
 
 # BAKEPATH
@@ -334,6 +335,8 @@ function bake_task () {
     fi
     BAKE_TASKS[$name]="ok"
     BAKE_TASK_DESCRIPTIONS[$name]="$short_desc"
+    bake_log_internal "registering task '$name' - '$short_desc'"
+    return 0
 }
 
 function bake_subtask () {
@@ -386,7 +389,9 @@ function bake_is_registered_task () {
     local name value
     name="$1"
     # for tname in "${!BAKE_TASKS[@]}"; do
+    bake_log_internal "bake_sorted_task_list=$(bake_sorted_task_list)"
     for tname in $(bake_sorted_task_list); do
+        bake_log_internal "name=$name == tname=$tname"
         # >&2 echo "::bake_is_registered_task: tanme=$tname == name=$name"
         if [[ "$tname" == "$name" ]]; then
             return 0
@@ -556,7 +561,7 @@ function bake_show_task_help () {
 }
 
 function bake_bakefile_help () {
-    local unknown_task is_registered fuzzy_matches
+    local unknown_task is_registered
     unknown_task="${1:-}"
     is_registered=""
 
@@ -570,8 +575,6 @@ function bake_bakefile_help () {
 
     if bake_is_registered_task "$unknown_task"; then
         is_registered="registered"
-    else
-        fuzzy_matches="$(bake_find_matching_tasks "$unknown_task")"
     fi
 
     # echo "::is_registered:unknown_task = '$is_registered:$unknown_task'"
@@ -590,35 +593,8 @@ function bake_bakefile_help () {
             bake_show_all_tasks
             ;;
     esac
+
     return 1
-
-    if [ -n "$unknown_task" ]; then
-        shift
-        ## TODO: $unknown_task is a complete, registered task, display the help for that task
-        if [[ "$unknown_task" == "help" ]]; then
-            shift
-            unknown_task="${1:-}"
-            if bake_is_registered_task "$unknown_task"; then
-                echo "::task is regsitered, calling bake_show_task_help"
-                bake_show_task_help "$unknown_task" "$@"
-                return 1
-            fi
-        fi
-        # echo "::not a registered task '$unknown_task'"
-
-        # is it a partial task? show help for any tasks that it's a substring of
-        # echo "::trying bake_show_matching_tasks"
-        if ! bake_show_matching_tasks "$unknown_task"; then
-            # echo "::failed to find matching tasks, falling through to bake_show_all_tasks"
-            bake_show_all_tasks
-            return 1
-        fi
-    fi
-
-    # nothing was passed, just show general help
-    # echo "::feel through to bake_show_all_tasks"
-    bake_show_all_tasks
-    echo ""
 }
 
 function bake_upgrade () {
@@ -670,41 +646,26 @@ END
 }
 
 function bake_source_bakefile() {
-    bakefile=$1
+    local bakefile
+    bakefile="$1"
     if [[ -d $bakefile ]]; then
         for f in "$bakefile"/*; do
+            bake_log_internal "sourcing from dir[$bakefile] '$f'"
             bake_source_bakefile "$f"
         done
     else
+        bake_log_internal "sourcing bakefile '$bakefile'"
         source "$bakefile"
     fi
 }
 
 function bake_run () {
-    local task="${1:-}"
-    if [ -n "$task" ]; then
-        shift
-    fi
+    local task
 
     local bakefile
     bakefile="$(bake_find_bakefile)"
 
     if [ ! -e "$bakefile" ]; then
-        if [ "$task" == "version" ]; then
-            bake_version
-            return 0
-        fi
-
-        if [ "$task" == "upgrade" ]; then
-            bake_upgrade
-            return 0
-        fi
-
-        if [ "$task" == "init" ]; then
-            bake_create_bakefile
-            return 0
-        fi
-
         echo "Error[bake_run]: could not locate a Bakefile!"
         echo ""
         bake_inernal_help
@@ -712,14 +673,53 @@ function bake_run () {
     fi
 
     export BAKEFILE="$bakefile"
+
+    while [[ "${1:-}" == --* ]]; do
+        case "$1" in
+            --init)
+                shift
+                bake_create_bakefile
+                return 0
+                ;;
+            --log-level=*)
+                bake_log_level "${1#*=}"
+                shift
+                ;;
+            --upgrade)
+                shift
+                bake_upgrade
+                return 0
+                ;;
+            --version)
+                shift
+                bake_version
+                return 0
+                ;;
+            *)
+                echo "bake:Error: unrecognized option: '$1'"
+                return 1
+                ;;
+        esac
+    done
+
+
+    task="${1:-}"
+    if [ -n "$task" ]; then
+        bake_log_internal "task passed to bake_run='$task'"
+        shift
+    fi
+
     bake_source_bakefile "$bakefile"
 
     if [ -n "$task" ]; then
+        bake_log_internal "have task='$task'"
         if bake_is_registered_task "$task"; then
+            bake_log_internal "task is regsitered, executing='$task' with args '$*'"
             $task "$@"
             exit $?
         fi
         # TODO: if it's a supertask and no subtask exists, show help for the supertask
+        bake_log_internal "not a registered task '$task', checking if supertask"
         if bake_is_registered_supertask "$task"; then
             if [ -n "${1:-}" ]; then
                 local tname="$task-$1"
@@ -845,6 +845,7 @@ function bake_echo_dgray    () {
 # @api.bake_log|logging function implementation, LNUM is the log level number, LNAME is the string name.
 # @api.bake_log|
 # @api.bake_log| LNUM should be one of:
+# @api.bake_log|   $BAKE_LOG_LEVEL_INTERNAL
 # @api.bake_log|   $BAKE_LOG_LEVEL_DEBUG
 # @api.bake_log|   $BAKE_LOG_LEVEL_INFO
 # @api.bake_log|   $BAKE_LOG_LEVEL_WARN
@@ -853,6 +854,7 @@ function bake_echo_dgray    () {
 # @api.bake_log|
 # @api.bake_log| LNAME should be one of the following:
 # @api.bake_log|
+# @api.bake_log|   "INTERNAL" nb: internal will cause bake's internal logging to be emitted (hint, it may be a lot)
 # @api.bake_log|   "DEBUG"
 # @api.bake_log|   "INFO"
 # @api.bake_log|   "WARN"
@@ -861,22 +863,24 @@ function bake_echo_dgray    () {
 # @api.bake_log|
 function bake_log () {
     local lnum lname
-    lnum="$1"
-    lname="$2"
-    [[ "$BAKE_LOG_LEVEL" -lt "$level" ]] && return 0
-    echo "[$lname $BAKEFILE:${$BASH_LINENO[2]}:${FUNCNAME[2]}] $*"
+    lnum="$1"  ; shift
+    lname="$1" ; shift
+    [[ "$BAKE_LOG_LEVEL" -lt "$lnum" ]] && return 0
+    echo "[$lname ${BAKEFILE:-}:${BASH_LINENO[1]}:${FUNCNAME[2]}] $*"
 }
 
+# @api.bake_log_internal|log at internal level
+function bake_log_internal () { bake_log "$BAKE_LOG_LEVEL_INTERNAL" "INTERNAL" "$*"; }
 # @api.bake_log_debug|log at debug level
-function bake_log_debug () { bake_log "$BAKE_LOG_LEVEL_DEBUG" "DEBUG" "$*" }
+function bake_log_debug () { bake_log "$BAKE_LOG_LEVEL_DEBUG" "DEBUG" "$*"; }
 # @api.bake_log_info|log at info level
-function bake_log_info  () { bake_log "$BAKE_LOG_LEVEL_INFO"  "INFO"  "$*" }
+function bake_log_info  () { bake_log "$BAKE_LOG_LEVEL_INFO"  "INFO"  "$*"; }
 # @api.bake_log_warn|log at warn level
-function bake_log_warn  () { bake_log "$BAKE_LOG_LEVEL_WARN"  "WARN"  "$*" }
+function bake_log_warn  () { bake_log "$BAKE_LOG_LEVEL_WARN"  "WARN"  "$*"; }
 # @api.bake_log_error|log at error level
-function bake_log_error () { bake_log "$BAKE_LOG_LEVEL_ERROR" "ERROR" "$*" }
+function bake_log_error () { bake_log "$BAKE_LOG_LEVEL_ERROR" "ERROR" "$*"; }
 # @api.bake_log_fatal|log at fatal level
-function bake_log_fatal () { bake_log "$BAKE_LOG_LEVEL_FATAL" "FATAL" "$*" }
+function bake_log_fatal () { bake_log "$BAKE_LOG_LEVEL_FATAL" "FATAL" "$*"; }
 
 # @api.bake_log_level|bake_log_level LEVEL
 # @api.bake_log_level|Sets the log level to LEVEL, LEVEL must be one of the following:
@@ -891,6 +895,9 @@ function bake_log_fatal () { bake_log "$BAKE_LOG_LEVEL_FATAL" "FATAL" "$*" }
 function bake_log_level () {
     local level="$1"
     case "$level" in
+        internal)
+            export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_INTERNAL"
+            ;;
         debug)
             export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_DEBUG"
             ;;
@@ -908,6 +915,10 @@ function bake_log_level () {
             ;;
         none)
             export BAKE_LOG_LEVEL="$BAKE_LOG_LEVEL_NONE"
+            ;;
+        *)
+            bake_log_error "invalid log level='$level'"
+            return 1
             ;;
     esac
 }
