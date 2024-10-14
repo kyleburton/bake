@@ -46,6 +46,13 @@
 (define-abbrev-table 'bakefile-mode-abbrev-table
   '())
 
+(defun bakefile-interactive-new-task (task-name)
+  (interactive "sTask Name:")
+  (insert "bake_task " task-name " " "docstring\n")
+  (insert task-name " () {\n")
+  (insert task-name "}\n")
+  (backward-char 3))
+
 ;; keymappings
 
 (defvar bakefile-mode-local-keymap
@@ -61,6 +68,7 @@
 ;;;###autoload
 (define-derived-mode bakefile-mode shell-script-mode "Bakefile"
   "Major mode for Bakefile files and developing bake."
+
   :abbrev-table bakefile-mode-abbrev-table
   (setq font-lock-defaults bakefile--font-lock-defaults)
   (setq-local indent-tabs-mode nil))

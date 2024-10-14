@@ -5,7 +5,7 @@ bake_task run-tests "Run tests"
 run-tests () {
     (
         cd test
-        bake all
+        bash ../bake all
     )
 }
 

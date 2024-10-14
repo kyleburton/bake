@@ -1,3 +1,7 @@
+2024-10-14T01:20:57Z - releasing 1.0.16
+  * TODO: introduce annotation based command line completion
+  * TODO: introduce annotation based help system
+  * removing support for subtasks / supertasks to simplify task handling
 2019-01-11T22:02:30Z - releasing 1.0.14
   bash command line completion now only completes the first word, see: https://github.com/kyleburton/bake/pull/29
 2017-07-23T19:58:49Z - releasing 1.0.6
