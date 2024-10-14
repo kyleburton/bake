@@ -19,7 +19,7 @@ _bake () {
     local pfx="${cur%%:*}:"
     for ((ii = 0; ii < ${#COMPREPLY[@]}; ++ii)); do
       local w="${COMPREPLY[$ii]}"
-      COMPREPLY[$ii]="${w#$pfx}"
+      COMPREPLY[ii]="${w#"$pfx"}"
     done
   fi
 

@@ -1,18 +1,17 @@
-#!/usr/bin/env bash
-set -eu
-
+#!/bin/bash
+set -eEuo pipefail
 
 bake_task bar_task "The bar_task command just echos its arguments"
 function bar_task () {
-  echo "bar_task: args='$@'"
+  echo "bar_task: args='$*'"
 }
 
 bake_task qux
 function qux () {
-  echo "qux: args='$@'"
+  echo "qux: args='$*'"
 }
 
 bake_task foo "The foo command just echos its arguments"
 function foo () {
-  echo "foo: args='$@'"
+  echo "foo: args='$*'"
 }

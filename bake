@@ -43,6 +43,10 @@ declare -A BAKE_LIBS
 
 # @api.bake_push_libdir|DESCRIPTION
 # @api.bake_push_libdir|  Push a library path on the front of BAKEPATH (searched first).
+# @api.bake_push_libdir|ARGUMENTS
+# @api.bake_push_libdir|  path  - the path to prepend to BAKEPATH
+# @api.bake_push_libdir|RETURNS
+# @api.bake_push_libdir|  0 on success
 function bake_push_libdir () {
     local path
     path="$1"
@@ -51,6 +55,10 @@ function bake_push_libdir () {
 
 # @api.bake_add_libdir|DESCRIPTION
 # @api.bake_add_libdir|  Push a library path on the end of BAKEPATH (searched last).
+# @api.bake_add_libdir|ARGUMENTS
+# @api.bake_add_libdir|  path - the path to append to BAKEPATH
+# @api.bake_add_libdir|RETURNS
+# @api.bake_add_libdir|  0 on success
 function bake_add_libdir () {
     local path
     path="$1"
@@ -59,6 +67,10 @@ function bake_add_libdir () {
 
 # @api.bake_default_task|DESCRIPTION
 # @api.bake_default_task|  Sets the default task to run if the user runs `bake` with no arguments.
+# @api.bake_default_task|ARGUMENTS
+# @api.bake_default_task|  task  - the name of the task that will be run by default
+# @api.bake_default_task|RETURNS
+# @api.bake_default_task|  0 on success
 function bake_default_task () {
     local task
     task="$1"
@@ -67,8 +79,10 @@ function bake_default_task () {
 
 # @api.bake_root_dir|DESCRIPTION
 # @api.bake_root_dir|  computes and prints the directory of the `bake` command.
-# @api.bake_root_dir|RETURN
-# @api.bake_root_dir|  prints the directory of the `bake` command
+# @api.bake_root_dir|ARGUMENTS
+# @api.bake_root_dir|  none
+# @api.bake_root_dir|RETURNS
+# @api.bake_root_dir|  0 on success
 function bake_root_dir () {
     # see: http://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
     pushd "$(dirname "$0")" > /dev/null
@@ -78,10 +92,12 @@ function bake_root_dir () {
     echo "$BAKE_ROOT_DIR"
 }
 
-
-
 # @api.bake_bakefile_dir|DESCRIPTION
 # @api.bake_bakefile_dir|  prints the directory of the BAKEFILE
+# @api.bake_bakefile_dir|ARGUMENTS
+# @api.bake_bakefile_dir|  none
+# @api.bake_bakefile_dir|RETURNS
+# @api.bake_bakefile_dir|  0 on success
 function bake_bakefile_dir () {
     dirname "$BAKEFILE"
 }
@@ -90,43 +106,38 @@ BAKE_ROOT_DIR="$(bake_root_dir)"
 
 # @api.bake_looks_like_git|DESCRIPTION
 # @api.bake_looks_like_git|  tests if the argument looks like a git@host:org/repo.git url
+# @api.bake_looks_like_git|ARGUMENTS
+# @api.bake_looks_like_git|  url - the url to test
+# @api.bake_looks_like_git|RETURNS
+# @api.bake_looks_like_git|  0 on success
+# @api.bake_looks_like_git|  1 if the argument does not start with `git@`
 function bake_looks_like_git () {
-    local thing
-    thing="$1"
-
-    if [[ $thing == git@* ]]; then
-        return 0
-    fi
-
-    return 1
+    [[ ${1:-} == git@* ]]
 }
 
-# @api.bake_looks_like_url|tests if the argument looks like a URL supported by bake_require
+# @api.bake_looks_like_url|DESCRIPTION
+# @api.bake_looks_like_url|  tests if the argument looks like a URL supported by bake_require
+# @api.bake_looks_like_url|ARGUMENTS
+# @api.bake_looks_like_url|  url - the url to test
+# @api.bake_looks_like_url|RETURNS
+# @api.bake_looks_like_url|  0 if the url looks like an http, https, or ssh url or starts with `github.com`
+# @api.bake_looks_like_url|  1 otherwise
 function bake_looks_like_url () {
-    local thing
-    thing="$1"
-
-    if [[ $thing == http://* ]]; then
-        return 0
-    fi
-
-    if [[ $thing == https://* ]]; then
-        return 0
-    fi
-
-    if [[ $thing == github.com/* ]]; then
-        return 0
-    fi
-
-    if [[ $thing == ssh://* ]]; then
-        return 0
-    fi
-
-    return 1
+    [[     "${1:-}" == http://*     ]] || \
+        [[ "${1:-}" == https://*    ]] || \
+        [[ "${1:-}" == github.com/* ]] || \
+        [[ "${1:-}" == ssh://*      ]]
 }
 
-# @api.bake_source_from_fs|load a library from a file in the file system.
-# @api.bake_source_from_fs|loaded files are added to the BAKE_LIBS associative array.
+# @api.bake_source_from_fs|DESCRIPTION
+# @api.bake_source_from_fs|  load a library from a file in the file system.
+# @api.bake_source_from_fs|  loaded files are added to the BAKE_LIBS associative array.
+# @api.bake_source_from_fs|ARGUMENTS
+# @api.bake_source_from_fs|  file   - the file to be sourced
+# @api.bake_source_from_fs|  fname  - the absolute path to the file, may be different from file, when
+# @api.bake_source_from_fs|           file is from one of the directories in the BAKEPATH
+# @api.bake_source_from_fs|RETURNS
+# @api.bake_source_from_fs|  0 on success, after the file has been sourced
 function bake_source_from_fs () {
     local file fname
     file="$1"
@@ -141,13 +152,16 @@ function bake_source_from_fs () {
     return 0
 }
 
-# @api.bake_require_from_fs|load a library from the file system, attempting the followng options, in order:
-# @api.bake_require_from_fs|* literal path
-# @api.bake_require_from_fs|* located under $(bake_bakefile_dir)
-# @api.bake_require_from_fs|* in any of the directories in $BAKEPATH
-# @api.bake_require_from_fs|
-# @api.bake_require_from_fs|RETURN
-# @api.bake_require_from_fs|
+# @api.bake_require_from_fs|DESCRPTION
+# @api.bake_require_from_fs|  load a library from the file system, attempting the followng options, in order:
+# @api.bake_require_from_fs|  * literal path
+# @api.bake_require_from_fs|  * located under $(bake_bakefile_dir)
+# @api.bake_require_from_fs|  * in any of the directories in $BAKEPATH
+# @api.bake_require_from_fs|ARGUMENTS
+# @api.bake_require_from_fs|  file - the file to require
+# @api.bake_require_from_fs|RETURNS
+# @api.bake_require_from_fs|  0 on success
+# @api.bake_require_from_fs|  throws if the file can not be found
 function bake_require_from_fs () {
     local file fname
     file="$1"
@@ -177,19 +191,22 @@ function bake_require_from_fs () {
     done
 
     bake_throw "Error[bake_require_from_fs]: unable to require $file! (not found on BAKEPATH)"
-    return 1
 }
 
-# @api.bake_url_to_package_path|convert `url` into a local package path
+# @api.bake_url_to_package_path|DESCRPTION
+# @api.bake_url_to_package_path|  convert `url` into a local package path
 # @api.bake_url_to_package_path|
-# @api.bake_url_to_package_path|* strip prefix up to and including `://`
-# @api.bake_url_to_package_path|* strip prefix up to and including `git@`
+# @api.bake_url_to_package_path|  * strip prefix up to and including `://`
+# @api.bake_url_to_package_path|  * strip prefix up to and including `git@`
 # @api.bake_url_to_package_path|
-# @api.bake_url_to_package_path|prints $BAKE_PACKAGES_PATH/<stripped-url>
+# @api.bake_url_to_package_path|  prints $BAKE_PACKAGES_PATH/<stripped-url>
 # @api.bake_url_to_package_path|
-# @api.bake_url_to_package_path|  bake_url_to_package_path "git@github.com:kyleburton/bake-recipes.git"
-# @api.bake_url_to_package_path|    => $BAKE_PACKAGES_PATH/kyleburton/bake-recipes.git
-# @api.bake_url_to_package_path|
+# @api.bake_url_to_package_path|    bake_url_to_package_path "git@github.com:kyleburton/bake-recipes.git"
+# @api.bake_url_to_package_path|      => $BAKE_PACKAGES_PATH/kyleburton/bake-recipes.git
+# @api.bake_url_to_package_path|ARGUMENTS
+# @api.bake_url_to_package_path|  url - the url to convert
+# @api.bake_url_to_package_path|RETURNS
+# @api.bake_url_to_package_path|  0 on success
 function bake_url_to_package_path () {
     local url
     url="$1"
@@ -205,6 +222,12 @@ function bake_url_to_package_path () {
     echo "$BAKE_PACKAGES_PATH/$fpath"
 }
 
+# @api.bake_git_to_url|DESCRPTION
+# @api.bake_git_to_url|  converts a `git@host:org/path.git` git url to an `ssh://gt@host/org/path.git` url
+# @api.bake_git_to_url|ARGUMENTS
+# @api.bake_git_to_url|  url - the url to convert
+# @api.bake_git_to_url|RETURNS
+# @api.bake_git_to_url|  0 on success
 function bake_git_to_url () {
     local url
     url="$1"
@@ -215,6 +238,13 @@ function bake_git_to_url () {
     echo ssh://git@"${host}"/"${path}"
 }
 
+# @api.bake_sanitize_url|DESCRPTION
+# @api.bake_sanitize_url|  if there is no schema, `https://` will be added, any traliing `/.git` suffix
+# @api.bake_sanitize_url|  will be stripped.
+# @api.bake_sanitize_url|ARGUMENTS
+# @api.bake_sanitize_url|  url - the url to process
+# @api.bake_sanitize_url|RETURNS
+# @api.bake_sanitize_url|  0 on success
 function bake_sanitize_url () {
     local url
     url="$1"
@@ -229,6 +259,12 @@ function bake_sanitize_url () {
     echo "$url"
 }
 
+# @api.bake_ensure_bake_packages_path|DESCRPTION
+# @api.bake_ensure_bake_packages_path|  creates $BAKE_PACKAGES_PATH if it doesn't exist
+# @api.bake_ensure_bake_packages_path|ARGUMENTS
+# @api.bake_ensure_bake_packages_path|  none
+# @api.bake_ensure_bake_packages_path|RETURNS
+# @api.bake_ensure_bake_packages_path|  0 on success
 function bake_ensure_bake_packages_path () {
     test -d "$BAKE_PACKAGES_PATH" || mkdir -p "$BAKE_PACKAGES_PATH"
 }
@@ -237,7 +273,16 @@ function bake_ensure_bake_packages_path () {
 # @api.bake_package_install|  install a git repo based package
 # @api.bake_package_install|ARGUMENTS
 # @api.bake_package_install|  url     - the git url, 'https://' and 'git@' urls are supported
+# @api.bake_package_install|            the URL must point both to a valid git repository (that
+# @api.bake_package_install|            can be cloned); and a file within the repository that
+# @api.bake_package_install|            can be sourced.
 # @api.bake_package_install|  tag     - optional tag or branch, defaults to 'master'
+# @api.bake_package_install|EXAMPLE
+# @api.bake_package_install|  bake_package_install https://github.com/kyleburton/bake/packages/bake/internal/test.sh
+# @api.bake_package_install|RETURNS
+# @api.bake_package_install|  0 on success
+# @api.bake_package_install|  throws if unable to parse the URL
+# @api.bake_package_install|  throws if the URL does not contain a file path
 function bake_package_install () {
     local url tag schema git_project_name git_host_and_user bake_library_file git_url
     url="$1"
@@ -290,6 +335,13 @@ function bake_package_install () {
     popd > /dev/null
 }
 
+# @api.bake_require_from_url|DESCRIPTION
+# @api.bake_require_from_url|  requires the library at url.  Bake will first attempt to install the
+# @api.bake_require_from_url|  package, see `bake_package_install`
+# @api.bake_require_from_url|ARGUMENTS
+# @api.bake_require_from_url|  url - the url of the library (file) to require
+# @api.bake_require_from_url|RETURNS
+# @api.bake_require_from_url|  0 on success
 function bake_require_from_url () {
     local url fspath
     url="$1"
@@ -316,7 +368,14 @@ function bake_require_from_url () {
     trap EXIT # clear the trap
 }
 
-# sources a library
+# @api.bake_require|DESCRIPTION
+# @api.bake_require|  sources a library.  The library may be a local file path, a remote git url or an http url.
+# @api.bake_require|  See bake_require_from_url for handling of remote urls, see bake_require_from_fs for
+# @api.bake_require|  handling of local paths.
+# @api.bake_require|ARGUMENTS
+# @api.bake_require|  module - the module to require (a file, an http, https, or git url)
+# @api.bake_require|RETURNS
+# @api.bake_require|  0 on success
 function bake_require () {
     local module
     module="$1"
@@ -332,6 +391,13 @@ function bake_require () {
     fi
 }
 
+# @api.bake_require_all|DESCRIPTION
+# @api.bake_require_all|  requires all of the files located under path.  See `bake_require`
+# @api.bake_require_all|  NB: this does not recurse.
+# @api.bake_require_all|ARGUMENTS
+# @api.bake_require_all|  path - the directory to require
+# @api.bake_require_all|RETURNS
+# @api.bake_require_all|  0 on success
 function bake_require_all () {
     local path files
     path="$1"
@@ -341,6 +407,13 @@ function bake_require_all () {
     done
 }
 
+# @api.bake_task|DESCRIPTION
+# @api.bake_task|  registers a task
+# @api.bake_task|ARGUMENTS
+# @api.bake_task|  name        - the name of the task
+# @api.bake_task|  short_desc  - the short description for the task
+# @api.bake_task|RETURNS
+# @api.bake_task|  0 on success
 # bake_task taskname ["description"]
 function bake_task () {
     local name short_desc
@@ -356,6 +429,12 @@ function bake_task () {
     return 0
 }
 
+# @api.bake_task_short_desc|DESCRIPTION
+# @api.bake_task_short_desc|  prints the first line of the short_desc registered for task. See `bake_task`
+# @api.bake_task_short_desc|ARGUMENTS
+# @api.bake_task_short_desc|  name  - the name of the task to retrieve the help text for.
+# @api.bake_task_short_desc|RETURNS
+# @api.bake_task_short_desc|  0 on success
 function bake_task_short_desc () {
     local name="${1:-}"
     local descr
@@ -363,6 +442,13 @@ function bake_task_short_desc () {
     echo "$descr" | head -n 1
 }
 
+# @api.bake_is_registered_task|DESCRIPTION
+# @api.bake_is_registered_task|  check if a given name is a registered task, see `bake_task`
+# @api.bake_is_registered_task|ARGUMENTS
+# @api.bake_is_registered_task|  name - the task name to check
+# @api.bake_is_registered_task|RETURNS
+# @api.bake_is_registered_task|  0 on success
+# @api.bake_is_registered_task|  1 of the name is not a registered task
 function bake_is_registered_task () {
     local name
     name="$1"
@@ -376,10 +462,16 @@ function bake_is_registered_task () {
         fi
     done
 
-    bake_log_internal "not a registere task='$name'"
+    bake_log_internal "not a registered task='$name'"
     return 1
 }
 
+# @api.bake_cd|DESCRIPTION
+# @api.bake_cd|  changes directory to the given path, or the location of the Bakefile
+# @api.bake_cd|ARGUMENTS
+# @api.bake_cd|  path - the optional path to cd to
+# @api.bake_cd|RETURNS
+# @api.bake_cd|  0 on success
 function bake_cd () {
     local path="${1:-}"
     if [ -z "$path" ]; then
@@ -389,6 +481,19 @@ function bake_cd () {
     fi
 }
 
+# @api.bake_find_bakefile_impl|DESCRIPTION
+# @api.bake_find_bakefile_impl|  locates the Bakefile using the following order
+# @api.bake_find_bakefile_impl|  * ./Bakefile in the pwd
+# @api.bake_find_bakefile_impl|  * ./bakefile in the pwd
+# @api.bake_find_bakefile_impl|  * if ./bake is a folder
+# @api.bake_find_bakefile_impl|  * if ./Bake is a folder
+# @api.bake_find_bakefile_impl|  if none are found, it will step one directory up and try again,
+# @api.bake_find_bakefile_impl|  repeating until it hits the root of the file system, where it will fail.
+# @api.bake_find_bakefile_impl|ARGUMENTS
+# @api.bake_find_bakefile_impl|  none
+# @api.bake_find_bakefile_impl|RETURNS
+# @api.bake_find_bakefile_impl|  0 on success, if a bake file or directory is found
+# @api.bake_find_bakefile_impl|  1 if the root of the file system is reached ('/')
 function bake_find_bakefile_impl () {
     local project_root
     project_root="$(pwd)"
@@ -421,18 +526,32 @@ function bake_find_bakefile_impl () {
     bake_find_bakefile_impl
 }
 
+# @api.bake_find_bakefile|DESCRIPTION
+# @api.bake_find_bakefile|  Returns $BAKEFILE if set, otherwise, saves $PWD into start_path, then
+# @api.bake_find_bakefile|  calls `bake_find_bakefile_impl` to find the BAKEFILE, returning to
+# @api.bake_find_bakefile|  start_path.
+# @api.bake_find_bakefile|ARGUMENTS
+# @api.bake_find_bakefile|  none
+# @api.bake_find_bakefile|RETURNS
+# @api.bake_find_bakefile|  0 on success
 function bake_find_bakefile () {
     local start_path
-    start_path="$(pwd)"
     if [ -n "${BAKEFILE:-}" ]; then
         echo "$BAKEFILE"
         return 0
     fi
 
+    start_path="$(pwd)"
     bake_find_bakefile_impl
     cd "$start_path" > /dev/null 2>&1
 }
 
+# @api.bake_inernal_help|DESCRIPTION
+# @api.bake_inernal_help|  prints bake's internal help
+# @api.bake_inernal_help|ARGUMENTS
+# @api.bake_inernal_help|  none
+# @api.bake_inernal_help|RETURNS
+# @api.bake_inernal_help|  0 on success
 function bake_inernal_help () {
     echo "$0 task [arg ...]"
     echo ""
@@ -449,12 +568,24 @@ function bake_inernal_help () {
     echo "   version     Show the version of bake!"
 }
 
+# @api.bake_sorted_task_list|DESCRIPTION
+# @api.bake_sorted_task_list|  returns the sorted list of registered tasks
+# @api.bake_sorted_task_list|ARGUMENTS
+# @api.bake_sorted_task_list|  none
+# @api.bake_sorted_task_list|RETURNS
+# @api.bake_sorted_task_list|  0 on success
 function bake_sorted_task_list () {
     local tasks
     tasks="$(echo "${!BAKE_TASKS[@]}" | tr ' ' \\n | sort -u | tr \\n ' ')"
     echo "${tasks% *}"
 }
 
+# @api.bake_find_matching_tasks|DESCRIPTION
+# @api.bake_find_matching_tasks|  prints a list of matching tasks (by substring)
+# @api.bake_find_matching_tasks|ARGUMENTS
+# @api.bake_find_matching_tasks|  unknown_task - the task substring to search for
+# @api.bake_find_matching_tasks|RETURNS
+# @api.bake_find_matching_tasks|  0 on success
 function bake_find_matching_tasks () {
     local unknown_task matches
     unknown_task="${1:-}"
@@ -468,6 +599,13 @@ function bake_find_matching_tasks () {
     echo "$matches"
 }
 
+# @api.bake_show_matching_tasks|DESCRIPTION
+# @api.bake_show_matching_tasks|  prints the list of matching tasks and descriptions, see `bake_find_matching_tasks`
+# @api.bake_show_matching_tasks|ARGUMENTS
+# @api.bake_show_matching_tasks|  unknown_task - the task substring to match
+# @api.bake_show_matching_tasks|RETURNS
+# @api.bake_show_matching_tasks| 0 on success
+# @api.bake_show_matching_tasks| 1 if no matching tasks are found
 function bake_show_matching_tasks () {
     local unknown_task matches
     unknown_task="${1:-}"
@@ -484,17 +622,29 @@ function bake_show_matching_tasks () {
     fi
 }
 
+# @api.bake_show_all_tasks|DESCRIPTION
+# @api.bake_show_all_tasks|  shows all tasks and descriptions
+# @api.bake_show_all_tasks|ARGUMENTS
+# @api.bake_show_all_tasks|  none
+# @api.bake_show_all_tasks|RETURNS
+# @api.bake_show_all_tasks|  0 on success
 function bake_show_all_tasks () {
     for task in $(bake_sorted_task_list); do
         printf "  %-30s %s\\n" "$task" "$(bake_task_short_desc "$task")"
     done
 }
 
+# @api.bake_show_task_help|DESCRIPTION
+# @api.bake_show_task_help|  prints the help text for a task
+# @api.bake_show_task_help|ARGUMENTS
+# @api.bake_show_task_help|  task - the name of the registered task to show the help for
+# @api.bake_show_task_help|RETURNS
+# @api.bake_show_task_help|  0 on success
 function bake_show_task_help () {
     local task line
     task="$1"
-    printf "\n"
-    printf "%s - %s\n" "$task" "$(bake_task_short_desc "$task")"
+    printf "\\n"
+    printf "%s - %s\\n" "$task" "$(bake_task_short_desc "$task")"
     printf "\\n"
     grep "^# @help.$task|" "$BAKEFILE" | while read -r line; do
         echo "${line#*|}"
@@ -502,6 +652,13 @@ function bake_show_task_help () {
     printf "\\n"
 }
 
+# @api.bake_bakefile_help|DESCRIPTION
+# @api.bake_bakefile_help|  displays detailed help for a registered task, brief help for matching tasks (by substring,
+# @api.bake_bakefile_help|  see `bake_show_matching_tasks`) or the list of all registerd tasks.
+# @api.bake_bakefile_help|ARGUMENTS
+# @api.bake_bakefile_help|  unknown_task - optional task name to display help for
+# @api.bake_bakefile_help|RETURNS
+# @api.bake_bakefile_help|  0 on success
 function bake_bakefile_help () {
     local unknown_task is_registered
     unknown_task="${1:-}"
@@ -510,9 +667,7 @@ function bake_bakefile_help () {
     if [[ "$unknown_task" == help ]]; then
         shift
         unknown_task="${1:-}"
-        echo "::unknown_task was help, re-grabbed \$1 = '$unknown_task'"
-        # else
-        #     "::unknown_task was NOT help, '$unknown_task'"
+        bake_log_internal "::unknown_task was help, re-grabbed \$1 = '$unknown_task'"
     fi
 
     if bake_is_registered_task "$unknown_task"; then
@@ -523,9 +678,11 @@ function bake_bakefile_help () {
     case "$is_registered:$unknown_task" in
         registered:*)
             # echo "::MATCH: is_registered:unknown_task = '$is_registered:$unknown_task'"
+            bake_log_internal "task='$unknown_task' is registered, showing specific help"
             bake_show_task_help "$unknown_task"
             ;;
         :*)
+            bake_log_internal "task='$unknown_task' is not registerd, showing matching tasks"
             bake_show_matching_tasks "$unknown_task"
             ;;
         *)
@@ -539,16 +696,68 @@ function bake_bakefile_help () {
     return 1
 }
 
+# @api.bake_api_help|DESCRIPTION
+# @api.bake_api_help|  display api help
+# @api.bake_api_help|ARGUMENTS
+# @api.bake_api_help|  api function to display help for
+# @api.bake_api_help|RETURNS
+# @api.bake_api_help|
+function bake_api_help () {
+    local apifn stdoutfilter
+    apifn="${1:-}"
+
+    bake_log_internal "apifn='$apifn'"
+
+    if [[ -n "$apifn" ]]; then
+        echo "NAME"
+        echo "  $apifn"
+        grep "^# @api.$apifn|" "$0" | cut -f2 -d\|
+        return 0
+    fi
+
+    stdoutfilter="cat"
+
+    if [[ "$BAKE_STDOUT_IS_TERMINAL" == yes ]]; then
+        stdoutfilter="less"
+    fi
+
+    for apifn in $(grep "^# @api." "$0" | cut -f1 -d\| | cut -f2 -d. | sort -u); do
+        echo "NAME"
+        echo "  $apifn"
+        grep "^# @api.$apifn|" "$0" | cut -f2 -d\|
+        echo ""
+        echo ""
+    done | "$stdoutfilter"
+}
+
+# @api.bake_upgrade|DESCRIPTION
+# @api.bake_upgrade|  downloads (via curl) bake from $BAKE_URL, overwriting `bake`
+# @api.bake_upgrade|ARGUMENTS
+# @api.bake_upgrade|  none
+# @api.bake_upgrade|RETURNS
+# @api.bake_upgrade|  0 on success
 function bake_upgrade () {
     curl -o "$0.new" "$BAKE_URL"
     chmod 755 "$0.new"
     mv "$0.new" "$0"
 }
 
+# @api.bake_version|DESCRIPTION
+# @api.bake_version|  prints the version of bake
+# @api.bake_version|ARGUMENTS
+# @api.bake_version|  none
+# @api.bake_version|RETURNS
+# @api.bake_version|  0 on success
 function bake_version () {
     echo "$BAKE_VERSION"
 }
 
+# @api.bake_update|DESCRIPTION
+# @api.bake_update|  attempts to update all packages installed in $HOME/.bake/pacakges
+# @api.bake_update|ARGUMENTS
+# @api.bake_update|  none
+# @api.bake_update|RETURNS
+# @api.bake_update|  0 on success
 function bake_update () {
     if [ ! -d "$HOME/.bake/packages" ]; then
         bake_echo_yellow "No libraries found in ~/.bake, nothing to upgrade"
@@ -569,6 +778,13 @@ function bake_update () {
     done
 }
 
+# @api.bake_create_bakefile|DESCRIPTION
+# @api.bake_create_bakefile|  creates a skeleton bakefile in the current directory, unless one exists
+# @api.bake_create_bakefile|ARGUMENTS
+# @api.bake_create_bakefile|  none
+# @api.bake_create_bakefile|RETURNS
+# @api.bake_create_bakefile|  0 on success
+# @api.bake_create_bakefile|  1 if there is already a bakefile
 function bake_create_bakefile () {
     if [ ! -e "Bakefile" ]; then
         cat > "Bakefile" <<'END'
@@ -579,14 +795,25 @@ function bake_create_bakefile () {
 # Set default editor if not defined
 export EDITOR="${EDITOR:-vi}"
 
+# @help.get-started|This is an example task, here's where the fun begins.
+# @help.get-started|(right now it launches $EDITOR on Bakefile, best of luck
+# @help.get-started| getting out of it ... https://stackoverflow.blog/2017/05/23/stack-overflow-helping-one-million-developers-exit-vim/)
 bake_task get-started "Get started by editing this Bakefile"
 function get-started () {
     "$EDITOR" Bakefile
 }
 END
+    else
+        return 1
     fi
 }
 
+# @api.bake_source_bakefile|DESCRIPTION
+# @api.bake_source_bakefile|  sources the bakefile to register available tasks
+# @api.bake_source_bakefile|ARGUMENTS
+# @api.bake_source_bakefile|  bakefile - the bakefile
+# @api.bake_source_bakefile|RETURNS
+# @api.bake_source_bakefile|  0 on success
 function bake_source_bakefile () {
     local bakefile
     bakefile="$1"
@@ -603,6 +830,22 @@ function bake_source_bakefile () {
     source "$bakefile"
 }
 
+# @api.bake_run|DESCRIPTION
+# @api.bake_run|  this is the "main" function of bake, which will run the named task,
+# @api.bake_run|  the default task, or dispkay help.
+# @api.bake_run|OPTIONS
+# @api.bake_run|  --init              - create a skeleton bakefile in the current
+# @api.bake_run|                        directory, see `bake_create_bakefile`.
+# @api.bake_run|  --log-level=LEVEL   - sets the log level, LEVEL may be any of
+# @api.bake_run|                        internal, debug, info, warn, error, fatal, or none
+# @api.bake_run|  --upgrade           - attempts to upgrade bake, see `bake_upgrade`
+# @api.bake_run|  --version           - prints the version of bake
+# @api.bake_run|ARGUMENTS
+# @api.bake_run|  task     - the name of the task to execute
+# @api.bake_run|RETURNS
+# @api.bake_run|  0 on success
+# @api.bake_run|  1 on failure
+# @api.bake_run|  * the return value of the executed task
 function bake_run () {
     local task
 
@@ -647,7 +890,6 @@ function bake_run () {
         esac
     done
 
-
     task="${1:-}"
     if [ -n "$task" ]; then
         bake_log_internal "task passed to bake_run='$task'"
@@ -663,34 +905,49 @@ function bake_run () {
             $task "$@"
             exit $?
         fi
+
+        bake_log_internal "check if we have an internal task='$task'"
+        case "$task" in
+            api)     bake_api_help "$@" ; return 0 ;;
+            upgrade) bake_upgrade  "$@" ; return 0 ;;
+            update)  bake_update   "$@" ; return 0 ;;
+        esac
+
+        bake_log_internal "not internal, unregistered task='$task', showing help"
+        bake_bakefile_help "$task" "$@"
+        exit 1
     fi
 
     if [ -n "$BAKE_DEFAULT_TASK" ]; then
-        "$BAKE_DEFAULT_TASK"
+        bake_log_internal "falling back to default=$BAKE_DEFAULT_TASK"
+        "$BAKE_DEFAULT_TASK" "$@"
         exit $?
     fi
 
-    if [ "$task" == upgrade ]; then
-        bake_upgrade
-        return 0
-    fi
-
-    if [ "$task" == update ]; then
-        bake_update
-        return 0
-    fi
-
+    bake_log_internal "fell through, displaygin help"
     bake_bakefile_help "$@"
     exit 1
 }
 
 
-# detect if we're being run or sourced
-# from: http://stackoverflow.com/questions/2683279/how-to-detect-if-a-script-is-being-sourced
+# @api.bake_is_main|DESCRIPTION
+# @api.bake_is_main|  detect if the script is being run or being sourced, see:
+# @api.bake_is_main|  http://stackoverflow.com/questions/2683279/how-to-detect-if-a-script-is-being-sourced
+# @api.bake_is_main|ARGS
+# @api.bake_is_main|  none
+# @api.bake_is_main|RETURNS
+# @api.bake_is_main|  0 if bake is being run
+# @api.bake_is_main|  1 if bake is being sourced
 function bake_is_main () {
     test "${FUNCNAME[1]}" = "main"
 }
 
+# @api.bake_init|DESCRIPTION
+# @api.bake_init|  initialize bake, sets terminal colors if stdout is a terminal.
+# @api.bake_init|ARGS
+# @api.bake_init|  none
+# @api.bake_init|RETURNS
+# @api.bake_init|  0 on success
 function bake_init () {
     if [ -t 1 ]; then
         BAKE_STDOUT_IS_TERMINAL="yes"
@@ -713,6 +970,13 @@ function bake_init () {
     fi
 }
 
+# @api.bake_color_echo|DESCRIPTION
+# @api.bake_color_echo|  echo using termianl escape colors if stdout is a terminal
+# @api.bake_color_echo|ARGS
+# @api.bake_color_echo|  color - the escape codes for the color to set
+# @api.bake_color_echo|  *     - all other options are passed to `echo`
+# @api.bake_color_echo|RETURNS
+# @api.bake_color_echo|  0 on success
 function bake_color_echo () {
     local color="$1"
     local opts="-e"
@@ -724,54 +988,132 @@ function bake_color_echo () {
     echo "$opts" " " "${color}$*${BAKE_COLOR_NORMAL}"
 }
 
+# @api.bake_echo_red|DESCRIPTION
+# @api.bake_echo_red|  echo the string in red
+# @api.bake_echo_red|ARGS
+# @api.bake_echo_red|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_red|RETURNS
+# @api.bake_echo_red|  0 on success
 function bake_echo_red      () {
     bake_color_echo "$BAKE_COLOR_RED" "$@"
 }
 
+# @api.bake_echo_lred|DESCRIPTION
+# @api.bake_echo_lred|  echo the string in light red
+# @api.bake_echo_lred|ARGS
+# @api.bake_echo_lred|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lred|RETURNS
+# @api.bake_echo_lred|  0 on success
 function bake_echo_lred     () {
     bake_color_echo "$BAKE_COLOR_LRED" "$@"
 }
 
+# @api.bake_echo_blue|DESCRIPTION
+# @api.bake_echo_blue|  echo the string in blue
+# @api.bake_echo_blue|ARGS
+# @api.bake_echo_blue|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_blue|RETURNS
+# @api.bake_echo_blue|  0 on success
 function bake_echo_blue     () {
     bake_color_echo "$BAKE_COLOR_BLUE" "$@"
 }
 
+# @api.bake_echo_lblue|DESCRIPTION
+# @api.bake_echo_lblue|  echo the string in light blue
+# @api.bake_echo_lblue|ARGS
+# @api.bake_echo_lblue|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lblue|RETURNS
+# @api.bake_echo_lblue|  0 on success
 function bake_echo_lblue    () {
     bake_color_echo "$BAKE_COLOR_LBLUE" "$@"
 }
 
+# @api.bake_echo_green|DESCRIPTION
+# @api.bake_echo_green|  echo the string in green
+# @api.bake_echo_green|ARGS
+# @api.bake_echo_green|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_green|RETURNS
+# @api.bake_echo_green|  0 on success
 function bake_echo_green    () {
     bake_color_echo "$BAKE_COLOR_GREEN" "$@"
 }
 
+# @api.bake_echo_lgreen|DESCRIPTION
+# @api.bake_echo_lgreen|  echo the string in light green
+# @api.bake_echo_lgreen|ARGS
+# @api.bake_echo_lgreen|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lgreen|RETURNS
+# @api.bake_echo_lgreen|  0 on success
 function bake_echo_lgreen   () {
     bake_color_echo "$BAKE_COLOR_LGREEN" "$@"
 }
 
+# @api.bake_echo_yellow|DESCRIPTION
+# @api.bake_echo_yellow|  echo the string in yellow
+# @api.bake_echo_yellow|ARGS
+# @api.bake_echo_yellow|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_yellow|RETURNS
+# @api.bake_echo_yellow|  0 on success
 function bake_echo_yellow   () {
     bake_color_echo "$BAKE_COLOR_YELLOW" "$@"
 }
 
+# @api.bake_echo_magenta|DESCRIPTION
+# @api.bake_echo_magenta|  echo the string in magenta
+# @api.bake_echo_magenta|ARGS
+# @api.bake_echo_magenta|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_magenta|RETURNS
+# @api.bake_echo_magenta|  0 on success
 function bake_echo_magenta  () {
     bake_color_echo "$BAKE_COLOR_MAGENTA" "$@"
 }
 
+# @api.bake_echo_lmagenta|DESCRIPTION
+# @api.bake_echo_lmagenta|  echo the string in light magenta
+# @api.bake_echo_lmagenta|ARGS
+# @api.bake_echo_lmagenta|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lmagenta|RETURNS
+# @api.bake_echo_lmagenta|  0 on success
 function bake_echo_lmagenta () {
     bake_color_echo "$BAKE_COLOR_LMAGENTA" "$@"
 }
 
+# @api.bake_echo_cyan|DESCRIPTION
+# @api.bake_echo_cyan|  echo the string in cyan
+# @api.bake_echo_cyan|ARGS
+# @api.bake_echo_cyan|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_cyan|RETURNS
+# @api.bake_echo_cyan|  0 on success
 function bake_echo_cyan     () {
     bake_color_echo "$BAKE_COLOR_CYAN" "$@"
 }
 
+# @api.bake_echo_lcyan|DESCRIPTION
+# @api.bake_echo_lcyan|  echo the string in light cyan
+# @api.bake_echo_lcyan|ARGS
+# @api.bake_echo_lcyan|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lcyan|RETURNS
+# @api.bake_echo_lcyan|  0 on success
 function bake_echo_lcyan    () {
     bake_color_echo "$BAKE_COLOR_LCYAN" "$@"
 }
 
+# @api.bake_echo_lgray|DESCRIPTION
+# @api.bake_echo_lgray|  echo the string in light gray
+# @api.bake_echo_lgray|ARGS
+# @api.bake_echo_lgray|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_lgray|RETURNS
+# @api.bake_echo_lgray|  0 on success
 function bake_echo_lgray    () {
     bake_color_echo "$BAKE_COLOR_LGRAY" "$@"
 }
 
+# @api.bake_echo_dgray|DESCRIPTION
+# @api.bake_echo_dgray|  echo the string in dark gray
+# @api.bake_echo_dgray|ARGS
+# @api.bake_echo_dgray|  * - all arguments are passed to `bake_color_echo`
+# @api.bake_echo_dgray|RETURNS
+# @api.bake_echo_dgray|  0 on success
 function bake_echo_dgray    () {
     bake_color_echo "$BAKE_COLOR_DGRAY" "$*"
 }
@@ -804,19 +1146,60 @@ function bake_log () {
     echo "[$lname ${BAKEFILE:-}:${BASH_LINENO[1]}:${FUNCNAME[2]}] $*"
 }
 
-# @api.bake_log_internal|log at internal level
+# @api.bake_log_internal|DESCRIPTION
+# @api.bake_log_internal|  log at internal level
+# @api.bake_log_internal|ARGUMENTS
+# @api.bake_log_internal|  * all arguments are passed to `bake_log`
+# @api.bake_log_internal|RETURNS
+# @api.bake_log_internal|  0 on success
 function bake_log_internal () { bake_log "$BAKE_LOG_LEVEL_INTERNAL" "INTERNAL" "$*"; }
-# @api.bake_log_debug|log at debug level
+
+# @api.bake_log_debug|DESCRIPTION
+# @api.bake_log_debug|  log at debug level
+# @api.bake_log_debug|ARGUMENTS
+# @api.bake_log_debug|  * all arguments are passed to `bake_log`
+# @api.bake_log_debug|RETURNS
+# @api.bake_log_debug|  0 on success
 function bake_log_debug () { bake_log "$BAKE_LOG_LEVEL_DEBUG" "DEBUG" "$*"; }
-# @api.bake_log_info|log at info level
+
+# @api.bake_log_info|DESCRIPTION
+# @api.bake_log_info|  log at info level
+# @api.bake_log_info|ARGUMENTS
+# @api.bake_log_info|  * all arguments are passed to `bake_log`
+# @api.bake_log_info|RETURNS
+# @api.bake_log_info|  0 on success
 function bake_log_info  () { bake_log "$BAKE_LOG_LEVEL_INFO"  "INFO"  "$*"; }
-# @api.bake_log_warn|log at warn level
+
+# @api.bake_log_warn|DESCRIPTION
+# @api.bake_log_warn|  log at warn level
+# @api.bake_log_warn|ARGUMENTS
+# @api.bake_log_warn|  * all arguments are passed to `bake_log`
+# @api.bake_log_warn|RETURNS
+# @api.bake_log_warn|  0 on success
 function bake_log_warn  () { bake_log "$BAKE_LOG_LEVEL_WARN"  "WARN"  "$*"; }
-# @api.bake_log_error|log at error level
+
+# @api.bake_log_error|DESCRIPTION
+# @api.bake_log_error|  log at error level
+# @api.bake_log_error|ARGUMENTS
+# @api.bake_log_error|  * all arguments are passed to `bake_log`
+# @api.bake_log_error|RETURNS
+# @api.bake_log_error|  0 on success
 function bake_log_error () { bake_log "$BAKE_LOG_LEVEL_ERROR" "ERROR" "$*"; }
-# @api.bake_log_fatal|log at fatal level
+
+# @api.bake_log_fatal|DESCRIPTION
+# @api.bake_log_fatal|  log at fatal level
+# @api.bake_log_fatal|ARGUMENTS
+# @api.bake_log_fatal|  * all arguments are passed to `bake_log`
+# @api.bake_log_fatal|RETURNS
+# @api.bake_log_fatal|  0 on success
 function bake_log_fatal () { bake_log "$BAKE_LOG_LEVEL_FATAL" "FATAL" "$*"; }
 
+# @api.bake_throw|DESCRIPTION
+# @api.bake_throw|  "throw" an exception, this will print the arguments and a stacktrace.
+# @api.bake_throw|ARGUMENTS
+# @api.bake_throw|  * all arguments will be printed
+# @api.bake_throw|RETURNS
+# @api.bake_throw|  1
 function bake_throw () {
     local lnum fnum lineno funcname
     echo "EXCEPTION: $*"
@@ -834,6 +1217,7 @@ function bake_throw () {
         lnum=$(( lnum + 1 ))
         fnum=$(( fnum + 1 ))
     done
+    return 1
 }
 
 # @api.bake_log_level|bake_log_level LEVEL

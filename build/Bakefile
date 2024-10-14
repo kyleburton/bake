@@ -7,81 +7,83 @@ if [ -n "${DEBUG:-}" ]; then
 fi
 
 function build::update-version () {
-  local infname="$1"
-  local vstring="$2"
+    local infname vstring
+    infname="$1"
+    vstring="$2"
 
-  bake_echo_green "build::update-version: infname=$infname vstring=$vstring PWD=$PWD"
-  #sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
-  sed -i -e "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+    bake_echo_green "build::update-version: infname=$infname vstring=$vstring PWD=$PWD"
+    #sed -i '' "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
+    sed -i -e "s/^BAKE_VERSION=\".*\"$/BAKE_VERSION=\"$vstring\"/" "$infname"
 }
 
 function build::curr-git-tag {
-  # local curr_tag="$(git tag -l | sort | tail -n 1)"
-  # local curr_tag="$(git describe --abbrev=0 --tags)"
-  local curr_tag="$(git tag | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -Vr | head -n1)"
-  if [ -z "$curr_tag" ]; then
-      echo "1.0.0"
-  fi
-  echo "$curr_tag"
+    local curr_tag
+    curr_tag="$(git tag | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -Vr | head -n1)"
+    if [ -z "$curr_tag" ]; then
+        echo "1.0.0"
+    fi
+    echo "$curr_tag"
 }
 
 function build::next-git-tag {
-  local curr_tag="$(build::curr-git-tag)"
+    curr_tag vmajor vminor vpatch
+    curr_tag="$(build::curr-git-tag)"
 
-  # major.minor.patch <- lets increment the patch
-  local vmajor="$(echo $curr_tag | cut -f1 -d.)"
-  local vminor="$(echo $curr_tag | cut -f2 -d.)"
-  local vpatch="$(echo $curr_tag | cut -f3 -d.)"
+    # major.minor.patch <- lets increment the patch
+    vmajor="$(echo "$curr_tag" | cut -f1 -d.)"
+    vminor="$(echo "$curr_tag" | cut -f2 -d.)"
+    vpatch="$(echo "$curr_tag" | cut -f3 -d.)"
 
-  echo "$vmajor.$vminor.$(($vpatch + 1))"
+    echo "$vmajor.$vminor.$((vpatch + 1))"
 }
 
 bake_task make-release "Cut a release"
 function make-release () {
-  local no_op="${1:-}"
-  local curr_tag="$(build::curr-git-tag)"
-  local next_tag="$(build::next-git-tag)"
+    local no_op curr_tag next_tag relname bundle_name
+    no_op="${1:-}"
+    curr_tag="$(build::curr-git-tag)"
+    next_tag="$(build::next-git-tag)"
 
-  local relname="bake-$next_tag"
-  local bundle_name="$relname.tgz"
+    relname="bake-$next_tag"
+    bundle_name="$relname.tgz"
 
-  bake_echo_green "curr_tag=$curr_tag"
-  bake_echo_green "next_tag=$next_tag"
+    bake_echo_green "curr_tag=$curr_tag"
+    bake_echo_green "next_tag=$next_tag"
 
-  if [ -n "$no_op" ]; then
-      exit 0
-  fi
+    if [ -n "$no_op" ]; then
+        exit 0
+    fi
 
-  shellcheck
+    shellcheck
 
-  (
-  cd ..
-  test -d ./release || mkdir ./release
-  test -d "./release/$relname/bin" || mkdir -p "./release/$relname/bin"
+    (
+        cd ..
+        test -d ./release || mkdir ./release
+        test -d "./release/$relname/bin" || mkdir -p "./release/$relname/bin"
 
-  cp README.md Changes "./release/$relname/"
-  cp bake bake-completion.sh "./release/$relname/bin"
+        cp README.md Changes "./release/$relname/"
+        cp bake bake-completion.sh "./release/$relname/bin"
 
-  build::update-version "./release/$relname/bin/bake" "$next_tag"
+        build::update-version "./release/$relname/bin/bake" "$next_tag"
 
-  tar -C ./release -czvf $bundle_name $relname
+        tar -C ./release -czvf "$bundle_name" "$relname"
 
-  git tag "$next_tag"
-  bake_echo_yellow "TODO: update Changes using the current date + git log using curr ($curr_tag) vs next ($next_tag) tags"
-  bake_echo_yellow "TODO: automate the process of creating the release in GH: https://help.github.com/articles/creating-releases/"
-  )
+        git tag "$next_tag"
+        bake_echo_yellow "TODO: update Changes using the current date + git log using curr ($curr_tag) vs next ($next_tag) tags"
+        bake_echo_yellow "TODO: automate the process of creating the release in GH: https://help.github.com/articles/creating-releases/"
+    )
 }
 
 bake_task clean "Clean up release archives and working directory"
 function clean () {
-  (
-  cd ..
-  rm -rf ./release
-  rm -f bake-*.*.*.tgz
-  )
+    (
+        cd ..
+        rm -rf ./release
+        rm -f bake-*.*.*.tgz
+    )
 }
 
 bake_task shellcheck "Run shellcheck on bake"
 function shellcheck () {
-  command shellcheck ../bake
+    command shellcheck ../bake
 }
