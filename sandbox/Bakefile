@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+bake_task docker
+function docker () {
+  command docker "$@"
+}
