@@ -83,5 +83,5 @@ function clean () {
 
 bake_task shellcheck "Run shellcheck on bake"
 function shellcheck () {
-  command shellcheck ../bake ../test/Bakefile ../test/*/*.sh
+  command shellcheck ../bake ../test/Bakefile $(find ../test/ -type f)
 }
