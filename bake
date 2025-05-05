@@ -208,10 +208,15 @@ function bake_package_install () {
   local git_host_and_user=
   local bake_library_file=
 
-  [[ $url =~ [a-zA-Z]+://([a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]] && \
-    git_host_and_user=${BASH_REMATCH[1]} && \
-    git_project_name=${BASH_REMATCH[2]} && \
-    bake_library_file=${BASH_REMATCH[3]}
+  if [[ $url =~ [a-zA-Z]+://([a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]]; then
+    git_host_and_user="${BASH_REMATCH[1]}"
+    git_project_name="${BASH_REMATCH[2]}"
+    bake_library_file="${BASH_REMATCH[3]}"
+  elif [[ $url =~ ^(github.com/[a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]]; then
+    git_host_and_user="${BASH_REMATCH[1]}"
+    git_project_name="${BASH_REMATCH[2]}"
+    bake_library_file="${BASH_REMATCH[3]}"
+  fi
 
   if [[ -z "$git_host_and_user" ]] || [[ -z "$git_project_name" ]]; then
     bake_echo_red "Error[bake_package_install] Could not parse url '$url'"
