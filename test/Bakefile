@@ -14,29 +14,36 @@ function in_test () {
   TEST_NAME="$1"
 }
 
+function test_passed () {
+  bake_echo_green "PASS: $TEST_NAME"
+  TEST_NAME=".none."
+  return 0
+}
+
 bake_test 01_find_bakefile_sets_absolute_path
 function 01_find_bakefile_sets_absolute_path () {
-  in_test $FUNCNAME
+  in_test "${FUNCNAME[0]}"
   cd lib
   test -f "$BAKEFILE"
   test -f "$(bake_bakefile_dir)/Bakefile"
   cd ..
+  test_passed
 }
 
 bake_test 02_bake_cd
 function 02_bake_cd () {
+  in_test "${FUNCNAME[0]}"
   cd lib
   bake_cd
   test -f Bakefile || exit 1
   bake_cd lib
   test -f ../Bakefile || exit 1
+  test_passed
 }
 
 bake_test 03_bake_looks_up_directory_tree
 function 03_bake_looks_up_directory_tree () {
-  bake_cd
-  bake_cmd="$(pwd)/../bake"
-  pwd
+  in_test "${FUNCNAME[0]}"
   cd sub/dir/a/b/c/
   if bake_find_bakefile_impl; then
     bake_echo_green "OK: found Bakefile from $(pwd)"
@@ -52,16 +59,21 @@ function 03_bake_looks_up_directory_tree () {
     bake_echo_green "OK: did not find Bakefile from $(pwd)"
   fi
   bake_cd
+  test_passed
 }
 
 bake_test 04_require_all
 function 04_require_all () {
+  in_test "${FUNCNAME[0]}"
   bake_require_all lib/
   bar_task
+  test_passed
+  test_passed
 }
 
 bake_test 05_looks_like_url
 function 05_looks_like_url () {
+  in_test "${FUNCNAME[0]}"
   local non_urls="lib/foo.sh nothing another.thing README.md some/directory/path gist.github.com/kyleburton/1234"
   local urls="http://github.com/kyleburton/bake/packages/vim/vim-go https://github.com/kyleburton/bake/packages/vim/vim-go github.com/kyleburton/bake/packages/vim/vim-go"
   for thing in $non_urls; do
@@ -77,17 +89,21 @@ function 05_looks_like_url () {
       return 1
     fi
   done
+  test_passed
 }
 
 bake_test 06_remote_require
 function 06_remote_require () {
+  in_test "${FUNCNAME[0]}"
   bake_package_install github.com/kyleburton/bake/packages/bake/internal/test.sh
   bake_require github.com/kyleburton/bake/packages/bake/internal/test.sh
   bake_echo_test "remote require successful"
+  test_passed
 }
 
 bake_test 07_echo_colors
 function 07_echo_colors () {
+  in_test "${FUNCNAME[0]}"
   echo "Testing terminal colors"
   bake_echo_red       "This should be red text"
   bake_echo_lred      "This should be 'light' red text"
@@ -111,32 +127,40 @@ function 07_echo_colors () {
   bake_echo_green  -n " and green"
   bake_echo_lgreen -n " and lgreen"
   echo " and the end of the line"
+  test_passed
 }
 
 bake_task 08_catch_failed_require
 function 08_catch_failed_require () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "NB: this test actually exits, so it can't be part of the normal suite."
   bake_echo_green "You should see a RED message 'I fail on require' and a message indicating where the error occurred, and then no more"
   bake_require lib2/fail-on-require.sh
   bake_echo_green "This is after the require, if you see this then the test failed."
+  test_passed
 }
 
 bake_test 09_test_bakepath
 function 09_test_bakepath () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "This tests that setting a Bakepath works appropriately"
   BAKEPATH="$PWD/lib" ../bake 09_test_bakepath_helper
   bake_echo_green "This is after the require, if you see this then the test succeeded."
+  test_passed
 }
 
 bake_task 09_test_bakepath_helper "Called by the associated test"
 function 09_test_bakepath_helper () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "This should be called with the BAKEPATH=\"$PWD\"/lib by the associated test"
   bake_require lib/mylib.sh
   bake_require mylib.sh
+  test_passed
 }
 
 bake_test 10_test_bakepath_directory
 function 10_test_bakepath_directory () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "This tests that setting a directory Bakepath works appropriately"
   tasks=(a b c)
   paths=(a a/b a/b/c)
@@ -150,10 +174,12 @@ function 10_test_bakepath_directory () {
     fi
   done
   bake_echo_green "This is after the bake directory call, if you see this then the test succeeded."
+  test_passed
 }
 
 bake_test 11_test_bakepath_directory_impl
 function 11_test_bakepath_directory_impl () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "This tests that setting an implicit directory bake works appropriately"
   cd impl/dir
   local bakepath
@@ -165,10 +191,12 @@ function 11_test_bakepath_directory_impl () {
     bake_echo_red "ERROR: did not find bake dir from $(pwd)"
     return 1
   fi
+  test_passed
 }
 
 bake_test 12_test_bakepath_file_impl
 function 12_test_bakepath_file_impl () {
+  in_test "${FUNCNAME[0]}"
   bake_echo_green "This tests that setting an implicit Bakefile works appropriately"
   cd impl/file
   local bakepath
@@ -180,16 +208,19 @@ function 12_test_bakepath_file_impl () {
     bake_echo_red "ERROR: did not find Bakefile from $(pwd)"
     return 1
   fi
+  test_passed
 }
 
 bake_test 13_local_require_support
 function 13_local_require_support () {
+  in_test "${FUNCNAME[0]}"
   # NB: the other tests already test local requires
   # here we only need to test realtive and absolute path'd requires
   # fully pathed
   bake_require "$(bake_bakefile_dir)/lib/mylib.sh"
   # relatively pathed
   bake_require "../test/lib/mylib.sh"
+  test_passed
 }
 
 bake_task all
@@ -205,14 +236,18 @@ function all () {
     bake_log_debug "running $test"
     if $test; then
       passed="$passed $test"
-      bake_echo_green "bake $test # OK"
-    else
-      failed="$failed $test"
-      bake_echo_red "bake $test # FAILED"
+      continue
     fi
+
+    failed="$failed $test"
+    bake_echo_red "FAILED: $test # bash -x $0 $test"
   done
+
   if [ -z "$failed" ]; then
     bake_echo_green "All tests passed"
+    return 0
   fi
+
+  bake_echo_red "FAILED: $failed"
 }
 
