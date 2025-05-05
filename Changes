@@ -1,3 +1,5 @@
+2025-05-05T18:05:50Z
+  shellcheck all bash files in the repository
 2025-05-05T17:31:16Z
   fixes #40 Github URL Parsing error (regression) introduced at commit e15295aea94cf9f750afbed66b6c011bd3f5b2bf
   library urls that begin with `gitub.com/` should be valid for `bake_package_install`
