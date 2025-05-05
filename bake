@@ -383,35 +383,49 @@ function bake_cd () {
 }
 
 function bake_find_bakefile_impl () {
-  local project_root
+  local project_root look_for_bakedir
+  look_for_bakedir="yes"
+  while [[ "${1:-}" == --* ]]; do
+    case "$1" in
+      --no-bakedir)
+        look_for_bakedir=""
+        shift
+        ;;
+      *)
+        bake_echo_red "ERROR: bake_find_bakefile_impl: unsupported option '$1'"
+        return 1
+        ;;
+    esac
+  done
+
   project_root="$(pwd)"
-  if [ -f "Bakefile" ]; then
+  if [[ -f "Bakefile" ]]; then
     echo "$project_root/Bakefile"
     return 0
   fi
 
-  if [ -f "bakefile" ]; then
+  if [[ -f "bakefile" ]]; then
     echo "$project_root/bakefile"
     return 0
   fi
 
-  if [ -d "bake" ]; then
+  if [[ -n "$look_for_bakedir" && -d "bake" ]]; then
     echo "$project_root/bake"
     return 0
   fi
 
-  if [ -d "Bake" ]; then
+  if [[ -n "$look_for_bakedir" && -d "Bake" ]]; then
     echo "$project_root/Bake"
     return 0
   fi
 
-  if [ "/" = "$(pwd)" ]; then
+  if [[ "/" = "$(pwd)" ]]; then
     echo ""
     return 1;
   fi
 
   cd ..
-  bake_find_bakefile_impl
+  bake_find_bakefile_impl --no-bakedir
 }
 
 function bake_find_bakefile () {
