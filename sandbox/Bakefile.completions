@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+function _bake_completions_docker () {
+  local cur words docker_cmd
+  _get_comp_words_by_ref -n : -c cur words
+  docker_cmd=( "${words[@]:1}" )
+  compgen -W "$(get_completions "${docker_cmd[@]}")" -- "$cur"
+}
