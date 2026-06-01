@@ -359,7 +359,8 @@ function bake_task_complete () {
 function bake_complete_task () {
   local task="$1"
   local cur="${2:-}"
-  shift 2 || true
+  local n_shift=$(( $# < 2 ? $# : 2 ))
+  shift "$n_shift"
 
   if declare -f "${task}:complete" > /dev/null 2>&1; then
     "${task}:complete" "$cur" "$@"
