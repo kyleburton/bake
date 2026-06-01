@@ -107,6 +107,10 @@ function deploy () {
 
 Pressing `<TAB>` after `bake deploy` will now offer `production`, `staging`, and `dev`.
 
+Completion candidates must be whitespace-separated words.
+
+Note that `${task}:complete` takes precedence over `bake_task_complete`.
+
 ## Dynamic argument completion with `${task}:complete`
 
 For tasks that need context-aware or dynamically generated completions, define a function named `${task}:complete`. It receives the word currently being typed as `$1`, followed by any words already typed for that task's arguments.
@@ -150,6 +154,10 @@ function deploy:complete () {
 The completion function just echoes candidates to stdout — no bash completion internals required. The completion script filters them against the current word automatically.
 
 If neither `${task}:complete` nor a `bake_task_complete` registration exists for a task, argument completion falls back to filename completion.
+
+Completion candidates must be whitespace-separated words.
+
+Note that `${task}:complete` takes precedence over `bake_task_complete`.
 
 ## The "API", aka what shell functions can you call from your `Bakefile`?
 

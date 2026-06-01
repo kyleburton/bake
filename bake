@@ -353,7 +353,14 @@ function bake_task_complete () {
     echo "Error[bake_task_complete]: you must supply a task name!"
     return 1
   fi
-  BAKE_TASK_COMPLETIONS[$name]="$completions"
+
+  if bake_is_registered_task "$name"; then
+    BAKE_TASK_COMPLETIONS[$name]="$completions"
+    return 0
+  fi
+
+  echo "Error[bake_task_complete]: not a registered task:'$task'"
+  return 1
 }
 
 function bake_complete_task () {
