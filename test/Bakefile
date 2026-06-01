@@ -223,6 +223,112 @@ function 13_local_require_support () {
   test_passed
 }
 
+bake_test 14_task_complete_static
+function 14_task_complete_static () {
+  in_test "${FUNCNAME[0]}"
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  cat > "$tmpdir/Bakefile" <<'EOF'
+bake_task deploy "Deploy the application"
+bake_task_complete deploy "production staging dev"
+function deploy () { echo "deploying $*"; }
+EOF
+  local result
+  result="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete deploy "")"
+  rm -rf "$tmpdir"
+  if [[ "$result" == "production staging dev" ]]; then
+    test_passed
+  else
+    bake_echo_red "Expected 'production staging dev', got '$result'"
+    return 1
+  fi
+}
+
+bake_test 15_task_complete_function
+function 15_task_complete_function () {
+  in_test "${FUNCNAME[0]}"
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  cat > "$tmpdir/Bakefile" <<'EOF'
+bake_task ship "Ship a service"
+function ship () { echo "shipping $*"; }
+function ship:complete () {
+  local cur="$1"
+  shift
+  echo "production staging dev"
+}
+EOF
+  local result
+  result="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete ship "")"
+  rm -rf "$tmpdir"
+  if [[ "$result" == "production staging dev" ]]; then
+    test_passed
+  else
+    bake_echo_red "Expected 'production staging dev', got '$result'"
+    return 1
+  fi
+}
+
+bake_test 16_task_complete_positional
+function 16_task_complete_positional () {
+  in_test "${FUNCNAME[0]}"
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  cat > "$tmpdir/Bakefile" <<'EOF'
+bake_task deploy "Deploy a service to an environment"
+function deploy () { echo "deploying $*"; }
+function deploy:complete () {
+  local cur="$1"
+  shift
+  local arg_pos=$#
+  case "$arg_pos" in
+    0) echo "production staging dev" ;;
+    1) echo "api worker frontend" ;;
+    2) echo "v1.0 v1.1 v2.0" ;;
+  esac
+}
+EOF
+  local r0 r1 r2
+  r0="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete deploy "")"
+  r1="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete deploy "" staging)"
+  r2="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete deploy "" staging api)"
+  rm -rf "$tmpdir"
+
+  if [[ "$r0" != "production staging dev" ]]; then
+    bake_echo_red "pos=0: expected 'production staging dev', got '$r0'"
+    return 1
+  fi
+  if [[ "$r1" != "api worker frontend" ]]; then
+    bake_echo_red "pos=1: expected 'api worker frontend', got '$r1'"
+    return 1
+  fi
+  if [[ "$r2" != "v1.0 v1.1 v2.0" ]]; then
+    bake_echo_red "pos=2: expected 'v1.0 v1.1 v2.0', got '$r2'"
+    return 1
+  fi
+  test_passed
+}
+
+bake_test 17_task_complete_no_output_when_unregistered
+function 17_task_complete_no_output_when_unregistered () {
+  in_test "${FUNCNAME[0]}"
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  cat > "$tmpdir/Bakefile" <<'EOF'
+bake_task build "Build the project"
+function build () { echo "building"; }
+EOF
+  local result
+  result="$(BAKEFILE="$tmpdir/Bakefile" ../bake --complete build "" 2>&1)"
+  rm -rf "$tmpdir"
+  if [[ -z "$result" ]]; then
+    test_passed
+  else
+    bake_echo_red "Expected empty output for unregistered completion, got '$result'"
+    return 1
+  fi
+}
+
 bake_task all
 function all () {
   bake_log_level fatal

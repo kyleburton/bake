@@ -45,6 +45,7 @@ declare -A BAKE_SUPERTASKS
 declare -A BAKE_SUBTASKS
 declare -A BAKE_TASK_DESCRIPTIONS
 declare -A BAKE_SUPERTASK_DESCRIPTIONS
+declare -A BAKE_TASK_COMPLETIONS
 declare -A BAKE_LIBS
 
 function bake_push_libdir () {
@@ -212,10 +213,11 @@ function bake_package_install () {
     git_host_and_user="${BASH_REMATCH[1]}"
     git_project_name="${BASH_REMATCH[2]}"
     bake_library_file="${BASH_REMATCH[3]}"
-  elif [[ $url =~ ^(github.com/[a-zA-Z0-9@-_.]+/[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/(.*) ]]; then
+  elif [[ $url =~ ^(github.com/[a-zA-Z0-9@-_.]+)/([a-zA-Z0-9_-]+)/(.*) ]]; then
     git_host_and_user="${BASH_REMATCH[1]}"
     git_project_name="${BASH_REMATCH[2]}"
     bake_library_file="${BASH_REMATCH[3]}"
+    schema="https"
   fi
 
   if [[ -z "$git_host_and_user" ]] || [[ -z "$git_project_name" ]]; then
@@ -344,6 +346,40 @@ function bake_supertask () {
   BAKE_SUPERTASK_DESCRIPTIONS[$supertask_name]="$short_desc"
 }
 
+function bake_task_complete () {
+  local name="${1:-}"
+  local completions="${2:-}"
+  if [ -z "$name" ]; then
+    echo "Error[bake_task_complete]: you must supply a task name!"
+    return 1
+  fi
+
+  if bake_is_registered_task "$name"; then
+    BAKE_TASK_COMPLETIONS[$name]="$completions"
+    return 0
+  fi
+
+  echo "Error[bake_task_complete]: not a registered task:'$task'"
+  return 1
+}
+
+function bake_complete_task () {
+  local task="$1"
+  local cur="${2:-}"
+  local n_shift=$(( $# < 2 ? $# : 2 ))
+  shift "$n_shift"
+
+  if declare -f "${task}:complete" > /dev/null 2>&1; then
+    "${task}:complete" "$cur" "$@"
+    return
+  fi
+
+  if [[ -n "${BAKE_TASK_COMPLETIONS[$task]:-}" ]]; then
+    echo "${BAKE_TASK_COMPLETIONS[$task]}"
+    return
+  fi
+}
+
 function bake_task_short_desc () {
   local name="${1:-}"
   local descr
@@ -432,7 +468,13 @@ function bake_find_bakefile () {
   local start_path
   start_path="$(pwd)"
   if [ -n "${BAKEFILE:-}" ]; then
-    echo "$BAKEFILE"
+    # Resolve to an absolute path so bake_cd works correctly regardless of
+    # where the caller set BAKEFILE relative to.
+    if [[ "$BAKEFILE" != /* ]]; then
+      echo "$start_path/$BAKEFILE"
+    else
+      echo "$BAKEFILE"
+    fi
     return 0
   fi
 
@@ -619,6 +661,11 @@ function bake_run () {
 
   export BAKEFILE="$bakefile"
   bake_source_bakefile "$bakefile"
+
+  if [ "$task" == "--complete" ]; then
+    bake_complete_task "$@"
+    return 0
+  fi
 
   if [ -n "$task" ]; then
     if bake_is_registered_task "$task"; then
