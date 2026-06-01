@@ -78,6 +78,79 @@ $ bake mylib:foo this that
 foo: args='this that'
 ```
 
+# Tab Completion
+
+`bake` ships with a bash completion script (`bake-completion.sh`) that completes task names and, optionally, each task's arguments.
+
+## Installing completion
+
+Source the script from your shell profile:
+
+```sh
+echo 'source /path/to/bake-completion.sh' >> ~/.bashrc
+```
+
+With a homebrew install the path is typically `/usr/local/etc/bash_completion.d/bake-completion.sh`.
+
+## Static argument completion with `bake_task_complete`
+
+For tasks with a fixed set of valid arguments, pair `bake_task_complete` with your `bake_task` declaration:
+
+```sh
+bake_task deploy "Deploy the application"
+bake_task_complete deploy "production staging dev"
+function deploy () {
+  local env="$1"
+  echo "Deploying to $env"
+}
+```
+
+Pressing `<TAB>` after `bake deploy` will now offer `production`, `staging`, and `dev`.
+
+## Dynamic argument completion with `${task}:complete`
+
+For tasks that need context-aware or dynamically generated completions, define a function named `${task}:complete`. It receives the word currently being typed as `$1`, followed by any words already typed for that task's arguments.
+
+After `shift`ing off `$1`, the remaining `$#` equals the number of arguments already completed, making positional completion straightforward:
+
+```sh
+bake_task deploy "Deploy a service to an environment"
+function deploy () {
+  local env="$1" service="$2" version="$3"
+  # ... deploy logic
+}
+
+function deploy:complete () {
+  local cur="$1"
+  shift
+  # $# is now the count of already-typed arguments
+  local arg_pos=$#
+
+  case "$arg_pos" in
+    0)
+      echo "production staging dev"
+      ;;
+    1)
+      local env="$1"
+      case "$env" in
+        production) echo "api worker frontend" ;;
+        staging)    echo "api worker frontend debug-service" ;;
+        dev)        echo "api worker frontend debug-service mock-service" ;;
+        *)          echo "api worker frontend" ;;
+      esac
+      ;;
+    2)
+      # Pull versions dynamically from git tags
+      git tag --list 'v*' 2>/dev/null
+      ;;
+  esac
+}
+```
+
+The completion function just echoes candidates to stdout — no bash completion internals required. The completion script filters them against the current word automatically.
+
+If neither `${task}:complete` nor a `bake_task_complete` registration exists for a task, argument completion falls back to filename completion.
+
 ## The "API", aka what shell functions can you call from your `Bakefile`?
 
 `bake` is controlled by a `Bakefile` (similarly to make and rake).  This file is just a bash script.  You define functions for your tasks and register them with `bake`.  `bake` itself is essentially a set of shell functions and you can (and are encouraged) to use them from within your `Bakefile`s.  This is an overview of the most useful ones (feel free to look around inside `bake` and see what else is there).
@@ -85,6 +158,10 @@ foo: args='this that'
 ### `bake_task task-name "task-description"`
 
 This registers a task and its description so it can be executed and help can be displayed.
+
+### `bake_task_complete task-name "word1 word2 ..."`
+
+Registers a static list of completion candidates for a task's arguments. Used by the bash completion script when the user presses `<TAB>` after the task name. For context-aware or dynamic completions, define a `${task}:complete` function instead (see [Tab Completion](#tab-completion)).
 
 ### `bake_default_task task-name`
 
